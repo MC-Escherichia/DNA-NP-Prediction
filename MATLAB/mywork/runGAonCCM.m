@@ -28,11 +28,29 @@ rhoAA_range = [0 1];
 rhoBB_range = [0 1];
 sigma = 5; 
 
-%%
-%% define fitness function
+bounds = [dna_ratio_range ;size_ratio_range ;rhoAA_range;rhoBB_range];
+lbs = bounds(:,1)';
+ubs = bounds(:,2)'; 
+crystStructParams = {crystalData.NNarr,crystalData.NParr,crystalData.dists};
+%% asymmetry scaling function
+steepness = 25; % making this larger increases the steepness of the sigmoid. 
+asym = @(deviate) 1./(1+exp(-steepness.*(deviate-0.5)));  
 
-%     function score = fitnessEvaluation(,
-%     end
+%% define fitness function
+    NPdes = crystalData.NParr{idx}; 
+
+     function scores = fitnessEvaluation(params)
+         dna_ratio = params(1);
+         size_ratio = params(2);
+         rho_AA = params(3);
+         rho_BB = params(4); 
+
+         
+         [duplex_f,E_f,test,dev,duplexf,Ef,kmax] = CCM_NNmain(crystStructParams,dna_ratio,size_ratio,rho_AA,rho_BB,sigma);
+         NPobt = crystalData.NParr{kmax}; 
+         
+         scores = (idx-kmax).^2 + 0.1*norm(NPdes-NPobt) + asym(dev); 
+     end
 
 %% decide crystal targets
 
@@ -53,9 +71,9 @@ options = gaoptimset(@ga);
    options.MutationFcn = @mutationadaptfeasible;
    options.PlotFcns = @gaplotbestf;
    options = gaoptimset(options,'HybridFcn',{ @fmincon []}); 
- [x fval reason output finalpop finalscores] = ga(@modelga, 2,'','','','',[0.1 0], [3 200],'',options);
+ [x fval reason output finalpop finalscores] = ga(@fitnessEvaluation, 4,'','','','',lbs, ubs,'',options);
 %% study convergences
 
-compound_name = crystalData.names(idx);
-out = crystalData
+
+out =  {x fval reason output finalpop finalscores} ;
 end

@@ -35,6 +35,7 @@ d_NP_core_AA = (rad_A + rad_A)*d;
 d_NP_core_AB = (rad_A + rad_B)*d;
 d_NP_core_BB = (rad_B + rad_B)*d;
 % Radius of overlap region between nanoparticles
+
 r_overlap_AB = (1/(2*d_NP_core_AB))*sqrt(4*d_NP_core_AB^2*rad_max_B^2 - (d_NP_core_AB^2 + rad_max_B^2 - rad_max_A^2)^2);
 r_overlap_AA = sqrt(rad_max_A^2 - (d_NP_core_AA/2)^2);
 r_overlap_BB = sqrt(rad_max_B^2 - (d_NP_core_BB/2)^2);
