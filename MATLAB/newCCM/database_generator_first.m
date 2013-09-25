@@ -4,7 +4,7 @@
 
 clear all; close all; clc;
 
-cd('C:\Users\Thi\Documents\School\Research\CCM w n nearest neighbors')
+cd('C:\matt\Documents\GitHub\DNA-NP-Prediction\MATLAB\newCCM')
 
 % Reading Excel Database
 [data,text] = xlsread('Crystal Database New.xlsx');
@@ -101,11 +101,11 @@ for i = 1:length(R_s_array)
         folder_name = strcat(str1,str2,str3,str4);
         mkdir(folder_name)
         cd(folder_name)
-        for k = length(compound_name):length(compound_name)
+        for k = 1:length(compound_name)
             disp(k)
             for a = 1:length(rho_AA)
                 for b = 1:length(rho_BB)
-                    [~,E] = CCM_NNfull(R_l,R_s,NN_full{k},NP_full{k},d_full{k},rho_AA(a),rho_BB(b),sigma);
+                    [~,E] = CCM_NNmain(R_l,R_s,NN_full{k},NP_full{k},d_full{k},rho_AA(a),rho_BB(b),sigma);
                     Et(a,b) = E;
                 end
             end
