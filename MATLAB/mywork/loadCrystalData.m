@@ -6,7 +6,7 @@ if(nargin<1)
 end
 
 % Reading Excel Database
-[data,text] = xlsread('Crystal Database New.xlsx');
+[data,text] = xlsread(path);
 
 compound_name = cell(length(text)-3,1);
 for i = 4:length(text)

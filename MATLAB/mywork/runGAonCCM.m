@@ -2,16 +2,13 @@
 function out = runGAonCCM(targetCrystalStructure)
 % takes a string corresponding to a crystal name from the data and returns a set of parameters 
 %% 
+
+global crystalData crystStructParams sigma752957958
 if(nargin<1)
     targetCrystalStructure = 'CsCl';
 end
 
-%% load database
 
-global crystalData idx
-% Creating compound name array
-% Preallocation
-crystalData = loadCrystalData(); 
 
 %% check if input entered right?
 idx = find(cellfun(@isempty,strfind(crystalData.names,targetCrystalStructure))-1);
@@ -23,10 +20,10 @@ while(isempty(idx))
 end
 %% define model space
 dna_ratio_range = [.1 3];
-size_ratio_range = [0.1 1];
+size_ratio_range = [0.1 10];
 rhoAA_range = [0 1];
 rhoBB_range = [0 1];
-sigma = 5; 
+sigma752957958 = 5; 
 
 bounds = [dna_ratio_range ;size_ratio_range ;rhoAA_range;rhoBB_range];
 lbs = bounds(:,1)';
@@ -38,7 +35,7 @@ asym = @(deviate) 1./(1+exp(-steepness.*(deviate-0.5)));
 
 %% define fitness function
     NPdes = crystalData.NParr{idx}; 
-
+    NNdes = crystalData.NNarr{idx}; 
      function scores = fitnessEvaluation(params)
          dna_ratio = params(1);
          size_ratio = params(2);
@@ -46,10 +43,11 @@ asym = @(deviate) 1./(1+exp(-steepness.*(deviate-0.5)));
          rho_BB = params(4); 
 
          
-         [duplex_f,E_f,test,dev,duplexf,Ef,kmax] = CCM_NNmain(crystStructParams,dna_ratio,size_ratio,rho_AA,rho_BB,sigma);
+         [duplex_f,E_f,test,dev,duplexf,Ef,kmax,Ef2] = CCM_NNmain(crystStructParams,dna_ratio,size_ratio,rho_AA,rho_BB,sigma752957958);
          NPobt = crystalData.NParr{kmax}; 
+         NNobt = crystalData.NNarr{kmax};
          
-         scores = (idx-kmax).^2 + 0.1*norm(NPdes-NPobt) + asym(dev); 
+         scores = norm(NNdes-NNobt) + norm(NPdes-NPobt) + asym(dev);  % + Ef2./E_f; 
      end
 
 %% decide crystal targets
@@ -66,14 +64,15 @@ settings.mp = 0.2;
 %% call GA
 options = gaoptimset(@ga);
    options.PopulationSize = 100;
-   options.Generations = 1000;
+   options.Generations = 300;
    options.PopInitRange = [0;300];
    options.MutationFcn = @mutationadaptfeasible;
    options.PlotFcns = @gaplotbestf;
    options = gaoptimset(options,'HybridFcn',{ @fmincon []}); 
  [x fval reason output finalpop finalscores] = ga(@fitnessEvaluation, 4,'','','','',lbs, ubs,'',options);
 %% study convergences
+structPred = crystalData.names{kmax};
+asymmetry = dev; 
 
-
-out =  {x fval reason output finalpop finalscores} ;
+out =  v2struct(structPred, x ,fval ,reason ,output ,finalpop, finalscores, asymmetry) ;
 end
