@@ -3,7 +3,9 @@ function out = runGAonCCM(targetCrystalStructure)
 % takes a string corresponding to a crystal name from the data and returns a set of parameters 
 %% 
 
-global crystalData crystStructParams sigma752957958
+global crystalData  sigma
+
+crystalData = loadCrystalData; 
 if(nargin<1)
     targetCrystalStructure = 'CsCl';
 end
@@ -23,15 +25,16 @@ dna_ratio_range = [.1 3];
 size_ratio_range = [0.1 10];
 rhoAA_range = [0 1];
 rhoBB_range = [0 1];
-sigma752957958 = 5; 
+sigma = 5; 
 
 bounds = [dna_ratio_range ;size_ratio_range ;rhoAA_range;rhoBB_range];
 lbs = bounds(:,1)';
 ubs = bounds(:,2)'; 
-crystStructParams = {crystalData.NNarr,crystalData.NParr,crystalData.dists};
+
 %% asymmetry scaling function
 steepness = 25; % making this larger increases the steepness of the sigmoid. 
 asym = @(deviate) 1./(1+exp(-steepness.*(deviate-0.5)));  
+enDiff  = @(Eratio) exp(steepness.*(Eratio-1)); 
 
 %% define fitness function
     NPdes = crystalData.NParr{idx}; 
@@ -41,14 +44,14 @@ asym = @(deviate) 1./(1+exp(-steepness.*(deviate-0.5)));
          size_ratio = params(2);
          rho_AA = params(3);
          rho_BB = params(4); 
-
+            [kmin,E,dev,E2] = CCM_NNfull(dna_ratio,size_ratio,rho_AA,rho_BB,sigma);
          
-         [duplex_f,E_f,test,dev,duplexf,Ef,kmax,Ef2] = CCM_NNmain(crystStructParams,dna_ratio,size_ratio,rho_AA,rho_BB,sigma752957958);
-         NPobt = crystalData.NParr{kmax}; 
-         NNobt = crystalData.NNarr{kmax};
          
-         scores = norm(NNdes-NNobt) + norm(NPdes-NPobt) + asym(dev);  % + Ef2./E_f; 
-     end
+         NPobt = crystalData.NParr{kmin}; 
+         NNobt = crystalData.NNarr{kmin};
+         
+         scores = norm(NNdes-NNobt) + norm(NPdes-NPobt) + asym(dev) + enDiff(E./E2);  
+      end
 
 %% decide crystal targets
 
