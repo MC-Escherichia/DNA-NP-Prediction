@@ -48,7 +48,6 @@ linker_BB = linker_BT*rho_BB;
 overlap = cell(1,length(d_array));
 for i = 1:length(d_array)
     d = d_array(i);
- 
     [overlap{i},area_total] = area_overlap(dna_increase,d);
 end
 
@@ -58,7 +57,7 @@ end
 area_req_A = 0;
 area_req_B = 0;
 for i = 1:length(d_array)
-    prod = overlap{i}.*NN_array{i,:};
+    prod = overlap{i}.*NN_array(i,:);
     area_req_A = area_req_A + sum(prod(1:2));
     area_req_B = area_req_B + sum(prod(3:4));
 end
@@ -82,14 +81,12 @@ end
 duplex = cell(1,length(d_array));
 E = cell(1,length(d_array));
 for i = 1:length(d_array)
-    NNs = NN_array{i,1};
-    NN_A_A = NNs(1);
-    NN_A_B = NNs(2);
-    NN_B_A = NNs(3);
-    NN_B_B = NNs(4);
-    NPs = NP_array{i,1};
-    NP_A = NPs(1);
-    NP_B = NPs(2);
+    NN_A_A = NN_array(i,1);
+    NN_A_B = NN_array(i,2);
+    NN_B_A = NN_array(i,3);
+    NN_B_B = NN_array(i,4);
+    NP_A = NP_array(1);
+    NP_B = NP_array(2);
     area_overlap_AA = overlap{i}(1);
     area_overlap_AB = overlap{i}(2);
     area_overlap_BA = overlap{i}(3);
