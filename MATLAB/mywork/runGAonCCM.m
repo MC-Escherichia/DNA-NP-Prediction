@@ -49,8 +49,8 @@ enDiff  = @(Eratio) exp(steepness.*(Eratio-1));
          
          NPobt = crystalData.NParr{kmin}; 
          NNobt = crystalData.NNarr{kmin};
-         
-         scores = norm(NNdes-NNobt) + norm(NPdes-NPobt) + asym(dev) + enDiff(E./E2);  
+       %%  disp([E E2])
+         scores = norm(NNdes-NNobt) + norm(NPdes-NPobt) + asym(dev); % + enDiff(E./E2);  
       end
 
 %% decide crystal targets
@@ -74,7 +74,7 @@ options = gaoptimset(@ga);
    options = gaoptimset(options,'HybridFcn',{ @fmincon []}); 
  [x fval reason output finalpop finalscores] = ga(@fitnessEvaluation, 4,'','','','',lbs, ubs,'',options);
 %% study convergences
-structPred = crystalData.names{kmax};
+structPred = crystalData.names{kmin};
 asymmetry = dev; 
 
 out =  v2struct(structPred, x ,fval ,reason ,output ,finalpop, finalscores, asymmetry) ;
