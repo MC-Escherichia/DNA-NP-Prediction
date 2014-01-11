@@ -3,7 +3,7 @@ function out = runGAonCCM(targetCrystalStructure)
 % takes a string corresponding to a crystal name from the data and returns a set of parameters 
 %% 
 
-global crystalData  sigma
+global crystalData  sigma memoDB
 
 crystalData = loadCrystalData; 
 if(nargin<1)
@@ -31,14 +31,23 @@ bounds = [dna_ratio_range ;size_ratio_range ;rhoAA_range;rhoBB_range];
 lbs = bounds(:,1)';
 ubs = bounds(:,2)'; 
 
+% convert bounds on parameters to single precision numbers 
+lbs = single(lbs);
+ubs = single(ubs); 
+
 %% asymmetry scaling function
 steepness = 25; % making this larger increases the steepness of the sigmoid. 
 asym = @(deviate) 1./(1+exp(-steepness.*(deviate-0.5)));  
-enDiff  = @(Eratio) exp(steepness.*(Eratio-1)); 
+enDiff  = @(Eratio) (exp(steepness.*Eration)-1)./(exp(steepness)-1);
 
 %% define fitness function
     NPdes = crystalData.NParr{idx}; 
-    NNdes = crystalData.NNarr{idx}; 
+    NNdes = crystalData.NNarr{idx};
+    function s = score(k, dev, r)
+        NPobt = crystalData.NParr{k}; 
+         NNobt = crystalData.NNarr{k};
+         s = norm(NNdes-NNobt) + norm(NPdes-NPobt) + asym(dev) + enDiff(E./E2);  
+    end
      function scores = fitnessEvaluation(params)
          dna_ratio = params(1);
          size_ratio = params(2);
@@ -47,32 +56,55 @@ enDiff  = @(Eratio) exp(steepness.*(Eratio-1));
             [kmin,E,dev,E2] = CCM_NNfull(dna_ratio,size_ratio,rho_AA,rho_BB,sigma);
          
          
-         NPobt = crystalData.NParr{kmin}; 
-         NNobt = crystalData.NNarr{kmin};
-       %%  disp([E E2])
-         scores = norm(NNdes-NNobt) + norm(NPdes-NPobt) + asym(dev); % + enDiff(E./E2);  
+         scores = score(kmin,dev,E2./E); 
+       
+        
       end
 
 %% decide crystal targets
 
+%% Find up to 40 good candidates from previous search
+
+entryset = memoDB.entrySet;
+it = entryset.iterator; 
+popList = {};
+while it.hasNext
+    entry = it.next; 
+    [k_e, dev_e, r_e] = entry.getValue; 
+    s = score(k_e,dev_e,r_e);
+    
+    if(size(popList,2)<=20)
+        popList=sortrows([popList;{entry.getKey s}],2);
+        
+               
+    elseif(popList{end,2}>s)
+        popList = sortrows([popList;{entry.getKey s}],2);
+        popList = popList(1:end-1,:);
+        
+    end
+end
+
+popList = cell2mat(cellfun(@(strn) eval(['double(' strn ')']),popList{1,:})); 
 %% Set GA settings
 
-settings.n_ind = 100;
-settings.n_ger = 1000;
-settings.elitism = 2/100; 
-settings.cp = 0.8;
-settings.mp = 0.2;
 
-
-%% call GA
 options = gaoptimset(@ga);
    options.PopulationSize = 100;
    options.Generations = 300;
+   options.PopulationType = 'doubleVector'; 
+   options.InitialPopulation = popList; 
    options.PopInitRange = [0;300];
    options.MutationFcn = @mutationadaptfeasible;
    options.PlotFcns = @gaplotbestf;
+   options.UseParallel = 'always'; 
+   options.Vectorized = 'on'; 
    options = gaoptimset(options,'HybridFcn',{ @fmincon []}); 
+   %% call GA
+
+   
  [x fval reason output finalpop finalscores] = ga(@fitnessEvaluation, 4,'','','','',lbs, ubs,'',options);
+ 
+ 
 %% study convergences
 structPred = crystalData.names{kmin};
 asymmetry = dev; 
