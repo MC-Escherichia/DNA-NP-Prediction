@@ -1,3 +1,0 @@
-JAVA=%JAVA_HOME/bin/java
-BASE=%INSTALL_PATH
-$JAVA -jar $BASE/Uninstaller/uninstaller.jar
