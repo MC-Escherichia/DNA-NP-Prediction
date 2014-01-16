@@ -33,20 +33,20 @@ import org.gavrog.box.simple.Strings;
 /**
  * This class handles catalogues of known space groups. For the time being, everything
  * here is static and the input files are hardwired.
- * 
+ *
  * @author Olaf Delgado
  * @version $Id: SpaceGroupCatalogue.java,v 1.19 2006/09/13 21:55:43 odf Exp $
  */
 public class SpaceGroupCatalogue {
 	private static boolean preferSecondOrigin = true;
 	private static boolean preferHexagonal = true;
-	
+
     /**
      * Making the constructor private prevents instantiation (I hope).
      */
     private SpaceGroupCatalogue() {
     }
-    
+
     /**
      * This class is used to represent a table of space group settings of a
      * given dimension.
@@ -57,14 +57,14 @@ public class SpaceGroupCatalogue {
         final public Map<String, CoordinateChange> nameToTransform =
         	new HashMap<String, CoordinateChange>();
         final public List<String> namesInOrder = new ArrayList<String>();
-        
+
         public Table(final int dimension) {
         }
     }
-    
+
     private static Table groupTables[] = new Table[5];
     private static Map<String, String> aliases = new HashMap<String, String>();
-    
+
     /**
      * Represents lookup information for groups, as used by {@link SpaceGroupFinder}.
      */
@@ -73,7 +73,7 @@ public class SpaceGroupCatalogue {
         final public CrystalSystem system;
         final public char centering;
         final public CoordinateChange fromStd;
-        
+
         public Lookup(final String name, final CrystalSystem system,
                 final char centering, final CoordinateChange fromStd) {
             this.name = name;
@@ -82,9 +82,9 @@ public class SpaceGroupCatalogue {
             this.fromStd = fromStd;
         }
     }
-    
+
     private static Map<String, Lookup> lookup = new HashMap<String, Lookup>();
-    
+
     /**
      * Represents the result of a table lookup.
      */
@@ -92,7 +92,7 @@ public class SpaceGroupCatalogue {
     	final public String key;
     	final public List<Operator> ops;
     	final public CoordinateChange transform;
-    	
+
     	public Entry(final String key, final List<Operator> ops,
     			final CoordinateChange transform) {
     		this.key = key;
@@ -100,27 +100,28 @@ public class SpaceGroupCatalogue {
     		this.transform = transform;
     	}
     }
-    
+
     /**
      * Parses space group settings from a file and stores them statically. Each setting is
      * identified by a name and the transformation used to derive it from the canonical
      * setting of the group, both given in the first input line. The following lines list
      * the operators for the group.
-     * 
+     *
      * CAVEAT: currently, due to the way the constructors are implemented, a full list of
      * operators must be given. Just a set of generators is not sufficient.
-     * 
+     *
      * TODO make this accept generator lists
-     * 
+     *
      * @param filename
      */
     private static void parseGroups(final String filename) {
+
         final InputStream inStream = ClassLoader.getSystemResourceAsStream(filename);
         final BufferedReader reader = new BufferedReader(new InputStreamReader(inStream));
-    
+
         Table table = null;
         String currentName = null;
-        
+
         while (true) {
             final String line;
             try {
@@ -197,17 +198,17 @@ public class SpaceGroupCatalogue {
     /**
 	 * The name of the file to read space group settings from.
 	 */
-    final private static String tablePath = "org/gavrog/joss/geometry/sgtable.data";
-    
+    final private static String tablePath = "sgtable.data";
+
     /**
      * Retrieves an iterator of all known names for group settings for a given
      * dimension. Names are returned in the order they appear in in the data
      * file. This order should be such that all settings for a given group
      * appear consecutively.
-     * 
+     *
      * CAVEAT: a group may have multiple settings, so this method may return
      * more than one name for each individual group.
-     * 
+     *
      * @param dimension the common dimension of the space groups.
      * @return an iterator over the names of space group settings.
      */
@@ -215,7 +216,7 @@ public class SpaceGroupCatalogue {
         if (groupTables[3] == null) {
             load();
         }
-    
+
         return groupTables[dimension].namesInOrder.iterator();
     }
 
@@ -233,13 +234,13 @@ public class SpaceGroupCatalogue {
             return base;
         }
     }
-    
+
     /**
 	 * Retrieves information about a given space group setting as identified by
 	 * its name. The return value contains the name under which the setting was
 	 * found (including suffices likes ":1" etc), the operator list and the
 	 * transformation used to obtain that setting from the canonical one.
-	 * 
+	 *
 	 * @param dim the dimension of the group.
 	 * @param name the name of the group setting to retrieve.
 	 * @return the data for the given space group setting.
@@ -253,7 +254,7 @@ public class SpaceGroupCatalogue {
         final String parts[] = name.split(":");
         final String base = normalizedName(name);
         final String ext = parts.length > 1 ? Strings.capitalized(parts[1]) : "";
-        
+
         final String candidates[];
         if (base.charAt(0) == 'R') {
             if (ext.equals("R")) {
@@ -274,7 +275,7 @@ public class SpaceGroupCatalogue {
         } else {
             candidates = new String[] { base, base + ":1", base + ":2" };
         }
-        
+
         for (int i = 0; i < candidates.length; ++i) {
             final String key = candidates[i];
             if (table.nameToOps.containsKey(key)) {
@@ -282,13 +283,13 @@ public class SpaceGroupCatalogue {
                 		table.nameToTransform.get(key));
             }
         }
-        
+
         return null;
     }
 
     /**
 	 * Retrieves the name under which a space group setting is listed.
-	 * 
+	 *
 	 * @param dim the dimension of the group.
 	 * @param name the name of the group setting.
 	 * @return the listed.
@@ -304,7 +305,7 @@ public class SpaceGroupCatalogue {
 
     /**
 	 * Retrieves the list of operators for a given space group setting.
-	 * 
+	 *
 	 * @param dim the dimension of the group.
 	 * @param name the name of the group setting.
 	 * @return the list of operators.
@@ -321,7 +322,7 @@ public class SpaceGroupCatalogue {
     /**
      * Retrieves a transformation to obtain a space group setting from the canonical setting
      * for that group.
-     * 
+     *
      * @param dim the dimension of the group.
      * @param name the name of the group setting.
      * @return the transformation operator.
@@ -339,12 +340,13 @@ public class SpaceGroupCatalogue {
      * Load the catalogue from the specification file.
      */
     public static void load() {
+
     	parseGroups(tablePath);
     }
-    
+
     /**
      * Retrieves the lookup information stored.
-     * 
+     *
      * @return an iterator over the values in the lookup table.
      */
     public static Iterator<Lookup> lookupInfo() {

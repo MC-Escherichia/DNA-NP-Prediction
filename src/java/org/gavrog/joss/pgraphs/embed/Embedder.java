@@ -131,11 +131,11 @@ public class Embedder {
 	private int passes = 3;
 	private boolean optimizePositions = true;
 	private boolean checkPositions = false;
-    private Map<INode, Point> initialPlacement;
+        private Map<INode, Point> initialPlacement;
 
 	/**
 	 * Constructs an instance.
-	 * 
+	 *
 	 * @param graph the periodic graph to embed.
 	 * @param checkPositions
 	 */
@@ -146,7 +146,7 @@ public class Embedder {
 		this.dimGraph = graph.getDimension();
 		final int dim = this.dimGraph;
 		this.checkPositions = checkPositions;
-		
+
 		if (initialPlacement == null)
 		    this.initialPlacement = this.graph.barycentricPlacement();
 		else
@@ -159,7 +159,7 @@ public class Embedder {
 		    for (final INode node: tmp.keySet())
 		        System.err.println("  " + node + ": " + tmp.get(node));
 		}
-		
+
 		this.node2sym = nodeSymmetrizations();
 
 		this.node2images = new HashMap<INode, Map<INode, Operator>>();
@@ -329,7 +329,7 @@ public class Embedder {
 	/**
 	 * Returns the orbits of the set of angles under the full combinatorial
 	 * symmetry group.
-	 * 
+	 *
 	 * @return an iterator over the set of orbits.
 	 */
 	private Iterator<Set<Angle>> angleOrbits() {

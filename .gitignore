@@ -8,3 +8,5 @@
 .settings/ccw.repl.cmdhistory.prefs
 data
 target/
+.lein-failure
+.lein-failures

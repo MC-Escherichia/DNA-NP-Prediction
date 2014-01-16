@@ -74,25 +74,25 @@ import buoy.event.EventSource;
  */
 public class SystreCmdline extends EventSource {
     final static boolean DEBUG = false;
-    
+
     static {
         Locale.setDefault(Locale.US);
     }
     // --- the last structure processed
     ProcessedNet lastStructure = null;
-    
+
     // --- the output stream
     private PrintStream out = System.out;
-    
+
     // --- the various archives
     private final Archive builtinArchive;
     private final Map<String, Archive> name2archive =
             new HashMap<String, Archive>();
     private final Archive internalArchive = new Archive("1.0");
-    
+
     // --- options
     private boolean computeEmbedding = true;
-    private boolean useOriginalEmbedding = false;    
+    private boolean useOriginalEmbedding = false;
     private boolean relaxPositions = true;
     private int relaxPasses = 3;
     private int relaxSteps = 10000;
@@ -102,10 +102,10 @@ public class SystreCmdline extends EventSource {
     private boolean outputSystreKey = false;
     private boolean duplicateIsError = false;
     private BufferedWriter outputArchive = null;
-    
+
     // --- the last file that was opened for processing
     private String lastFileNameWithoutExtension;
-    
+
     // --- signals a cancel request from outside
     private boolean cancelled = false;
 
@@ -119,18 +119,19 @@ public class SystreCmdline extends EventSource {
         builtinArchive = new Archive("1.0");
 
         // --- read the default archives
-        final Package pkg = this.getClass().getPackage();
-        final String packagePath = pkg.getName().replaceAll("\\.", "/");
-        
-        final String rcsrPath = packagePath + "/rcsr.arc";
+        //final Package pkg = this.getClass().getPackage();
+        // final String packagePath = pkg.getName().replaceAll("\\.", "/");
+
+        //        final String rcsrPath = packagePath + "/rcsr.arc";
+        final String rcsrPath = "rcsr.arc";
         final InputStream rcsrStream =
                 ClassLoader.getSystemResourceAsStream(rcsrPath);
         builtinArchive.addAll(new InputStreamReader(rcsrStream));
     }
-    
+
     /**
      * Reads an archive file and stores it internally.
-     * 
+     *
      * @param filename the name of the archive file.
      */
     public void processArchive(final String filename) {
@@ -158,26 +159,26 @@ public class SystreCmdline extends EventSource {
             out.println();
         }
     }
-    
+
     public void processGraph(final Net graph, String name, final boolean embed) {
 
     	status("Initializing...");
-    	
+
     	// enable this code to test error handling
 //    	if (graph != null) {
 //    		throw new RuntimeException("this is not a love song");
 //    	}
-    	
+
     	this.cancelled = false;
         setLastStructure(null);
         PeriodicGraph G = graph;
         final int d = G.getDimension();
         final String givenGroup = graph.getGivenGroup();
-        
+
         if (DEBUG) {
             out.println("\t\t@@@ Graph is " + G);
         }
-        
+
         // --- print some information on net as given
         out.println("   Input structure described as " + d + "-periodic.");
         out.println("   Given space group is " + givenGroup + ".");
@@ -195,7 +196,7 @@ public class SystreCmdline extends EventSource {
         }
         // --- get and check the barycentric placement
     	status("Computing barycentric placement...");
-    	
+
         final Map<INode, Point> barycentric = G.barycentricPlacement();
         if (!G.isBarycentric(barycentric)) {
             final String msg = "Incorrect barycentric placement.";
@@ -210,9 +211,9 @@ public class SystreCmdline extends EventSource {
         }
         out.println();
         out.flush();
-        
+
         quitIfCancelled();
-        
+
         // --- test if it is Systre-compatible
         if (!G.isLocallyStable()) {
             throw new SystreException(SystreException.STRUCTURE,
@@ -233,7 +234,7 @@ public class SystreCmdline extends EventSource {
             out.println(msg);
             out.println();
         }
-        
+
         quitIfCancelled();
 
         // --- determine a minimal repeat unit
@@ -246,52 +247,52 @@ public class SystreCmdline extends EventSource {
         // --- determine the ideal symmetries
     	status("Computing ideal symmetry group...");
         final List<Operator> ops = G.symmetryOperators();
-        showSymmetryOperators(G, ops);        
+        showSymmetryOperators(G, ops);
         quitIfCancelled();
-        
+
         // --- name node orbits according to input names
         status("Mapping node names...");
         final Map<INode, String> node2name = nodeNameMapping(G, M);
         quitIfCancelled();
-        
+
         // --- determine the coordination sequences
     	status("Computing coordination sequences...");
         showCoordinationSequences(G, (Net) M.getSourceGraph(), node2name);
         quitIfCancelled();
-        
+
         // --- determine the point symbols if requested
         if (getComputePointSymbols() && G.getDimension() >= 3) {
             status("Computing Wells point symbols...");
             showPointSymbols(G, node2name);
             quitIfCancelled();
         }
-        
+
         // --- find the space group name and conventional settings
     	status("Determining and verifying the space group...");
         final SpaceGroupFinder finder =
                 new SpaceGroupFinder(new SpaceGroup(d, ops));
         showSpaceGroup(d, givenGroup, ops, finder);
         quitIfCancelled();
-        
+
         // --- determine the Systre key and look it up in the archives
     	status("Computing the unique invariant (a.k.a. Systre key) for this net...");
-    	
+
         final String invariant = G.getSystreKey();
         if (getOutputSystreKey()) {
         	out.println("   Systre key: \"" + invariant + "\"");
         }
 
         status("Looking for isomorphic nets...");
-    	
+
         int countMatches = lookupGraphAndShowMatches(invariant);
         if (countMatches == 0) {
         	status("Storing the Systre key for this net...");
             doStoreGraph(G, invariant, name == null ? "nameless" : name);
         }
         out.flush();
-        
+
         quitIfCancelled();
-        
+
         // --- compute an embedding
         if (getComputeEmbedding()) {
             if (getUseOriginalEmbedding()
@@ -472,7 +473,7 @@ public class SystreCmdline extends EventSource {
         }
         out.println();
         out.flush();
-        
+
         final CoordinateChange trans = SpaceGroupCatalogue
 				.transform(d, extendedGroupName);
         if (!trans.isOne()) {
@@ -517,7 +518,7 @@ public class SystreCmdline extends EventSource {
         		node2orbit.put(v, orbit);
         	}
         }
-        
+
         final Map<Set<INode>, String> orbit2name =
                 new HashMap<Set<INode>, String>();
         final Map<String, Set<INode>> name2orbit =
@@ -526,7 +527,7 @@ public class SystreCmdline extends EventSource {
         final Set<Pair<String, String>> mergedNames =
                 new LinkedHashSet<Pair<String, String>>();
         final Net G0 = (Net) M.getSourceGraph();
-        
+
         for (final INode v: G0.nodes()) {
         	final String nodeName = G0.getNodeName(v);
         	final INode w = M.getImage(v);
@@ -556,7 +557,7 @@ public class SystreCmdline extends EventSource {
 				throw new SystreException(SystreException.INTERNAL, msg);
 			}
 		}
-        
+
         if (mergedNames.size() > 0) {
 			out.println("   Equivalences for non-unique nodes:");
 			for (final Pair<String, String> item: mergedNames) {
@@ -651,7 +652,7 @@ public class SystreCmdline extends EventSource {
 
     /**
      * Processes the components of a disconnected graph.
-     * 
+     *
 	 * @param graph the graph to process.
 	 * @param name the name to use for archiving.
 	 */
@@ -692,7 +693,7 @@ public class SystreCmdline extends EventSource {
             out.println("       URL:\t\t" + entry.getURL());
         }
     }
-    
+
     private void embedGraph(
             final PeriodicGraph G,
             final String name,
@@ -704,7 +705,7 @@ public class SystreCmdline extends EventSource {
 
     	for (int pass = 0; pass <= 1; ++pass) {
         	status("Computing an embedding...");
-        	
+
             // --- relax the structure from the initial embedding
             Embedder embedder =
                     new Embedder(G, initialPlacement, checkPositions);
@@ -724,12 +725,12 @@ public class SystreCmdline extends EventSource {
                 embedder.reset();
             }
             embedder.normalize();
-            
+
             quitIfCancelled();
-            
+
             // --- do some checking
         	status("Verifying the embedding...");
-        	
+
             final IArithmetic det = embedder.getGramMatrix().determinant();
             if (det.isLessThan(new FloatingPoint(0.001))) {
                 out.println("==================================================");
@@ -763,12 +764,12 @@ public class SystreCmdline extends EventSource {
                     throw new SystreException(SystreException.INTERNAL, msg);
                 }
             }
-            
+
             quitIfCancelled();
-            
+
             // --- write a Systre readable net description to a string buffer
         	status("Preparing the output...");
-        	
+
             final StringWriter cgdStringWriter = new StringWriter();
             final PrintWriter cgd = new PrintWriter(cgdStringWriter);
             final ProcessedNet net =
@@ -794,9 +795,9 @@ public class SystreCmdline extends EventSource {
                 }
                 out.println();
                 success = true;
-                
+
                 quitIfCancelled();
-                
+
             } catch (Exception ex) {
                 if (DEBUG) {
                     out.println("\t\t@@@ Failing output:");
@@ -813,9 +814,9 @@ public class SystreCmdline extends EventSource {
                     throw new RuntimeException(ex);
                 }
             }
-            
+
             quitIfCancelled();
-            
+
             // --- now write the actual output
             if (success) {
             	status("Writing output...");
@@ -829,10 +830,10 @@ public class SystreCmdline extends EventSource {
             }
         }
     }
-    
+
     /**
 	 * Analyzes all nets specified in a file and prints the results.
-	 * 
+	 *
 	 * @param filePath
 	 *            the name of the input file.
 	 */
@@ -852,12 +853,12 @@ public class SystreCmdline extends EventSource {
         this.lastFileNameWithoutExtension =
                 new File(filePath).getName().replaceFirst("\\..*$", "");
         out.println("Data file \"" + filePath + "\".");
-        
+
         // --- loop through the structures specified in the input file
         while (inputs.hasNext()) {
             Net G = null;
             Exception problem = null;
-            
+
             // --- read the next net
             status("Reading...");
             try {
@@ -866,14 +867,14 @@ public class SystreCmdline extends EventSource {
                 problem = ex;
             }
             ++count;
-            
+
             // --- some blank lines as separators
             out.println();
             if (count > 1) {
                 out.println();
                 out.println();
             }
-            
+
             // --- process the graph
             String name = null;
             try {
@@ -895,17 +896,17 @@ public class SystreCmdline extends EventSource {
                 archiveName = name;
                 displayName = Strings.parsable(name, true);
             }
-            
+
             out.println("Structure #" + count + " - " + displayName + ".");
             out.println();
-            
+
             if (G != null && G.getWarnings().hasNext())
             {
             	for (Iterator<String> iter = G.getWarnings(); iter.hasNext();)
             		out.println("   (" + iter.next() + ")");
                 out.println();
             }
-            
+
             if (problem != null) {
             	if (problem instanceof DataFormatException) {
                     out.println("==================================================");
@@ -935,10 +936,10 @@ public class SystreCmdline extends EventSource {
         out.println();
         out.println("Finished data file \"" + filePath + "\".");
     }
-    
+
     /**
      * Reports an error that occurred during the reading or processing of a graph.
-     * 
+     *
      * @param ex the exception thrown.
      * @param count the running number of the graph in the current file.
      * @param name the name of the graph.
@@ -956,32 +957,32 @@ public class SystreCmdline extends EventSource {
         out.print(Misc.stackTrace(ex, "!!!       "));
         out.println("==================================================");
     }
-    
+
     private void reportErrorLocation(final int count, final String name) {
         out.println("!!!    In structure #" + count + " - " + name + ".");
         out.println("!!!    Last status: " + this.lastStatus);
     }
-    
+
     /**
      * Writes all the entries read from data files onto a stream.
-     * 
+     *
      * @param writer represents the output stream.
      * @throws IOException if writing to the stream did not work.
      */
     public int writeInternalArchive(final Writer writer) throws IOException {
     	return writeArchive(writer, this.internalArchive);
     }
-    
+
     /**
      * Writes all the entries from Systre's builtin archive onto a stream.
-     * 
+     *
      * @param writer represents the output stream.
      * @throws IOException if writing to the stream did not work.
      */
     public int writeBuiltinArchive(final Writer writer) throws IOException {
     	return writeArchive(writer, this.builtinArchive);
     }
-    
+
     private int writeArchive(final Writer writer, final Archive archive)
 			throws IOException {
 		int count = 0;
@@ -992,20 +993,20 @@ public class SystreCmdline extends EventSource {
         }
         return count;
     }
-    
+
     /**
      * This method takes command line arguments one by one and passes them to
      * {@link #processDataFile} or {@link #processArchive}.
-     * 
+     *
      * @param args the command line arguments.
      */
     public void run(final String args[]) {
         final List<String> files = new LinkedList<String>();
         final List<String> archives = new LinkedList<String>();
-         
+
         boolean archivesAsInput = false;
         String outputArchiveFileName = null;
-        
+
         for (int i = 0; i < args.length; ++i) {
             final String s = args[i];
             if (s.equals("-b")
@@ -1085,14 +1086,14 @@ public class SystreCmdline extends EventSource {
                 }
             }
         }
-        
+
         if (files.size() == 0) {
             out.println("!!! WARNING (USAGE) - No file names given.");
         }
-        
+
         int count = 0;
-        
-        
+
+
         if (outputArchiveFileName != null) {
             try {
                 this.outputArchive = new BufferedWriter(
@@ -1101,11 +1102,11 @@ public class SystreCmdline extends EventSource {
                 out.println("!!! ERROR (FILE) - Could not open output archive:" + ex);
             }
         }
-        
+
         for (final String filename: archives) {
             this.processArchive(filename);
         }
-        
+
         for (final String filename: files) {
             ++count;
             if (count > 1) {
@@ -1115,7 +1116,7 @@ public class SystreCmdline extends EventSource {
             }
             this.processDataFile(filename);
         }
-        
+
         if (this.outputArchive != null) {
             try {
         	this.outputArchive.flush();
@@ -1126,7 +1127,7 @@ public class SystreCmdline extends EventSource {
             }
         }
     }
-    
+
     public static void main(final String args[]) {
         new SystreCmdline().run(args);
     }
@@ -1135,12 +1136,12 @@ public class SystreCmdline extends EventSource {
     	this.lastStatus = text;
     	dispatchEvent(text);
     }
-    
+
 	public synchronized void cancel() {
 		this.cancelled = true;
 		status("Cancel request received!");
 	}
-	
+
 	private void quitIfCancelled() {
 		if (this.cancelled) {
 			this.cancelled = false;
@@ -1148,7 +1149,7 @@ public class SystreCmdline extends EventSource {
 						"Execution stopped for this structure");
 		}
 	}
-	
+
     void saveOptions(final String configFileName) {
     	// --- pick up all property values for this instance
     	final Properties ourProps;
@@ -1158,7 +1159,7 @@ public class SystreCmdline extends EventSource {
 			ex.printStackTrace();
 			return;
 		}
-		
+
 		// --- write them to the configuration file
     	try {
 			ourProps.store(new FileOutputStream(configFileName),
@@ -1183,7 +1184,7 @@ public class SystreCmdline extends EventSource {
 			out.println("Exception occurred while reading configuration file");
 			return;
 		}
-		
+
 		// --- override by system properties if defined
 		for (final Object x: ourProps.keySet()) {
 			final String key = (String) x;
@@ -1192,7 +1193,7 @@ public class SystreCmdline extends EventSource {
 				ourProps.setProperty(key, val);
 			}
 		}
-    	
+
 		// --- set the properties for this instance
     	try {
     		Config.pushProperties(ourProps, this);
@@ -1200,7 +1201,7 @@ public class SystreCmdline extends EventSource {
 			ex.printStackTrace();
 		}
     }
-    
+
 	// --- user-definable properties
     public ProcessedNet getLastStructure() {
         return this.lastStructure;
@@ -1229,11 +1230,11 @@ public class SystreCmdline extends EventSource {
 	public boolean getUseOriginalEmbedding() {
 	    return this.useOriginalEmbedding;
 	}
-	
+
 	public void setUseOriginalEmbedding(boolean val) {
 	    this.useOriginalEmbedding = val;
 	}
-	
+
 	public boolean getRelaxPositions() {
 		return relaxPositions;
 	}
@@ -1273,23 +1274,23 @@ public class SystreCmdline extends EventSource {
 	public void setDuplicateIsError(boolean duplicateIsError) {
 		this.duplicateIsError = duplicateIsError;
 	}
-	
+
     protected PrintStream getOutStream() {
         return this.out;
     }
-    
+
     protected void setOutStream(final PrintStream out) {
         this.out = out;
     }
-    
+
     public boolean getOutputFullCell() {
         return this.outputFullCell;
     }
-    
+
     public void setOutputFullCell(boolean fullCellOutput) {
         this.outputFullCell = fullCellOutput;
     }
-    
+
 	public boolean getOutputSystreKey() {
 		return this.outputSystreKey;
 	}

@@ -32,9 +32,10 @@
                  [xstream/xstream "1.2.2"]]
 
   :plugins [[lein-pprint "1.1.1"]
-            ]
+            [lein-idefiles "0.2.0"]
+            [lein-junit "1.1.2"]]
 
-;  :repositories
+                                        ;  :repositories
 ;  [["java.net" "http://download.ava.net/maven/2"]]
   ;; These repositories will be included with :repositories when loading plugins.
   ;; This would normally be set in a profile for non-public repositories.
@@ -47,7 +48,7 @@
   ;; directly but apply the "update" profile instead.
   :update :always
 
-
+  :profiles {:dev {:dependencies [[junit/junit "4.11"]]}}
 
   ;;; Profiles
   ;; Each active profile gets merged into the project map. The :dev
@@ -140,9 +141,11 @@
   ;; If you'd rather use a different directory structure, you can set these.
   ;; Paths that contain "inputs" are string vectors, "outputs" are strings.
   :source-paths ["src/clojure"]
-  :java-source-paths ["src/java"] ; Java source is stored separately.
+  :java-source-paths ["src/java" "test/java"] ; Java source is stored separately.
+
+  :junit ["test/java"]
   :test-paths ["test" ]
-  :resource-paths ["src/main/resource"] ; Non-code files included in classpath/jar.
+  :resource-paths ["resources"] ; Non-code files included in classpath/jar.
   ;; All generated files will be placed in :target-path. In order to avoid
   ;; cross-profile contamination (for instance, uberjar classes interfering
   ;; with development), it's recommended to include %s in in your custom
@@ -199,8 +202,8 @@
                  :init (println "here we are in" *ns*)
                  ;; Customize the socket the repl task listens on and
                  ;; attaches to.
-                 :host "0.2.2.2"
-                 :port 4001
+         ;;        :host "0.2.2.2"
+         ;;        :port 4001
                  ;; If nREPL takes too long to load it may timeout,
                  ;; increase this to wait longer before timing out.
                  ;; Defaults to 30000 (30 seconds)
