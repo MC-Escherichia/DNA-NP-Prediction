@@ -27,7 +27,9 @@
   :dependencies [[org.clojure/clojure "1.3.0"]
                  [criterium "0.4.2"]
                  [org.jogamp.gluegen/gluegen-rt-main "2.1.3"]
-                 [org.jogamp.jogl/jogl-all-main "2.1.3"]]
+                 [org.jogamp.jogl/jogl-all-main "2.1.3"]
+                 [local/jreality-native-deps "2014.01.15"]
+                 [xstream/xstream "1.2.2"]]
 
   :plugins [[lein-pprint "1.1.1"]
             ]
@@ -94,7 +96,7 @@
   ;; Normally Leiningen runs the javac and compile tasks before
   ;; calling any eval-in-project code, but you can override this with
   ;; the :prep-tasks key to do other things like compile protocol buffers.
-  :prep-tasks [["protobuf" "compile"] "javac" "compile"]
+ ; :prep-tasks [["protobuf" "compile"] "javac" "compile"]
   ;; These namespaces will be AOT-compiled. Needed for gen-class and
   ;; other Java interop functionality. Put a regex here to compile all
   ;; namespaces whose names match. If you only need AOT for an uberjar
