@@ -194,7 +194,10 @@ public class Main extends EventSource {
 	private Color edgeColor = Color.BLACK;
 	private double edgeOpacity = 1.0;
 	private boolean smoothFaces = true;
+	private boolean DNANP = false; 
 	
+
+
 	// --- display options
 	private boolean drawEdges = true;
 	private boolean drawFaces = true;
@@ -3355,6 +3358,28 @@ public class Main extends EventSource {
         };
         return optionsDialog(options, makeButton("Reload", apply, "call"));
     }
+    private Widget optionsDNANP(){
+    	final ColumnContainer options = emptyOptionsContainer();
+    	
+    	try {
+    		options.add(new OptionCheckBox("Embed as following DNA params",this,"DNANP"));
+    	} catch (final Exception ex) {
+            log(ex.toString());
+            return null;
+        }
+        
+    	 final Object apply = new Object() {
+             @SuppressWarnings("unused")
+             public void call() {
+             	new Thread(new Runnable() {
+ 					public void run() {
+ 		                reembed();
+ 		                saveOptions();
+ 					}}).start();
+             }
+         };
+         return optionsDialog(options, makeButton("Embed as DNANP", apply, "call"));
+    }
     
     private Widget optionsTiles() {
         final ColumnContainer options = emptyOptionsContainer();
@@ -3689,6 +3714,7 @@ public class Main extends EventSource {
         options.add(optionsLights(), "Lights");
         options.add(optionsGUI(), "GUI");
         options.add(optionsTilings(), "Tilings");
+        options.add(optionsDNANP(), "DNANP");
 		return options;
     }
     
@@ -4441,5 +4467,12 @@ public class Main extends EventSource {
 
 	public void setNetNodeRadius(final double value) {
 		_setField("netNodeRadius", value);
+	}
+	public boolean getDNANP() {
+		return this.DNANP;
+	}
+
+	public void setDNANP(boolean value) {
+		_setField("DNANP", value);
 	}
 }

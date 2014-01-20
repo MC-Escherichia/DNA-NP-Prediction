@@ -48,6 +48,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 public class Embedder {
     final static boolean DEBUG = false;
 
+    public boolean embedAsDNANP = false;
     final private static int EDGE = 1;
 	final private static int ANGLE = 2;
 
@@ -293,7 +294,7 @@ public class Embedder {
 		final int n = M.numberOfRows();
 		final int d = M.numberOfColumns();
 
-		// --- make a local copy to work with
+		// --- make a local copy to work withyg
 		final Matrix N = M.mutableClone();
 
 		// --- not sure if this is of any use, but do it anyway
@@ -502,6 +503,104 @@ public class Embedder {
 	}
 
 	// --- the following methods do the actual optimization
+
+	private double CCMenergy(final double point[]) {
+		// --- get some general data
+		final int dim = this.dimGraph;
+		final int n = getGraph().numberOfNodes();
+
+		// --- extract and adjust the Gram matrix
+		final Matrix gram = getGramMatrix(point);
+
+		// --- make it an easy to read array
+		final double g[] = gramToArray(gram);
+
+		// --- use our original coordinates if only cell is relaxed
+		final double p[];
+		if (getRelaxPositions() == false) {
+			p = this.p;
+		} else {
+			p = point;
+		}
+
+		// --- compute variance of squared edge lengths
+		double edgeSum = 0.0;
+		double edgeWeightSum = 0.0;
+		double minEdge = Double.MAX_VALUE;
+
+		for (int k = 0; k < this.edges.length; ++k) {
+			final Edge e = this.edges[k];
+			final double pv[] = getPosition(e.v, p);
+			final double pw[] = getPosition(e.w, p);
+			final double s[] = e.shift;
+			final double diff[] = new double[dim];
+			for (int i = 0; i < dim; ++i) {
+				diff[i] = pw[i] + s[i] - pv[i];
+			}
+			double len = 0.0;
+			for (int i = 0; i < dim; ++i) {
+				len += diff[i] * diff[i] * g[this.gramIndex[i][i]];
+				for (int j = i + 1; j < dim; ++j) {
+					len += 2 * diff[i] * diff[j] * g[this.gramIndex[i][j]];
+				}
+			}
+			len = Math.sqrt(len);
+			e.length = len;
+
+
+			if (e.type == EDGE) {
+				edgeSum += len * e.weight;
+				;
+				edgeWeightSum += e.weight;
+				minEdge = Math.min(len, minEdge);
+			}
+		}
+		final double avg = edgeSum / edgeWeightSum;
+		if (edgeWeightSum != getGraph().numberOfEdges()) {
+			System.out.println("edgeWeightSum is " + edgeWeightSum
+					+ ", but should be " + getGraph().numberOfEdges());
+		}
+		final double scaling = avg > 1e-12 ? 1.01 / avg : 1.01;
+
+		double edgeVariance = 0.0;
+		double edgePenalty = 0.0;
+		double anglePenalty = 0.0;
+		for (int k = 0; k < this.edges.length; ++k) {
+			final Edge e = this.edges[k];
+			final double len = e.length * scaling;
+			final double penalty;
+			if (len < 0.5) {
+				final double x = Math.max(len, 1e-12);
+				penalty = Math.exp(Math.tan((0.25 - x) * 2.0 * Math.PI))
+						* e.weight;
+			} else {
+				penalty = 0.0;
+			}
+			if (e.type == EDGE) {
+				final double t = (1 - len * len);
+				edgeVariance += t * t * e.weight;
+				edgePenalty += penalty;
+			} else {
+				anglePenalty += penalty;
+			}
+		}
+		edgeVariance /= edgeWeightSum;
+		if (edgeVariance < 0) {
+			throw new RuntimeException("edge lengths variance got negative: "
+					+ edgeVariance);
+		}
+
+		// --- compute volume per node
+		final Matrix gramScaled = (Matrix) gram.times(scaling * scaling);
+		final double cellVolume = Math.sqrt(((Real) gramScaled.determinant())
+				.doubleValue());
+		final double volumePenalty = Math.exp(1 / Math.max(cellVolume / n,
+				1e-12)) - 1;
+
+		// --- compute and return the total energy
+		return this.volumeWeight * volumePenalty + edgeVariance +
+			   this.penaltyFactor * (edgePenalty + anglePenalty);
+	}
 
 	private double energy(final double point[]) {
 		// --- get some general data
@@ -740,6 +839,7 @@ public class Embedder {
 			return 0;
 		}
 
+
 		final Amoeba.Function energy = new Amoeba.Function() {
 			public int dim() {
 				if (getRelaxPositions()) {
@@ -750,11 +850,16 @@ public class Embedder {
 			}
 
 			public double evaluate(final double[] p) {
-				return energy(p);
+                               if(embedAsDNANP){
+                                    // monkeypatched in by MFC 2014
+                                    return CCMenergy(p);
+                               } else {
+                                   return energy(p);
+                               }
 			}
 		};
 
-		// --- here's the relaxation procedure
+            // --- here's the relaxation procedure
 		double p[] = this.p;
 		final int nrPasses = Math.max(1, this.passes);
 
@@ -768,8 +873,9 @@ public class Embedder {
 		}
 		this._positionsRelaxed = getRelaxPositions();
 		this._cellRelaxed = true;
-		return steps;
+                return steps;
 	}
+
 
 	public void reset() {
 		setPositions(this.initialPlacement);

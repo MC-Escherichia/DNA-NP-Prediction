@@ -46,17 +46,17 @@ public class UndirectedGraph implements IGraph {
     private long nextNodeId = 1;
     private long nextEdgeId = -1;
 
-    private Map<Long, Class<? extends IGraphElement>> idToType =
+    protected Map<Long, Class<? extends IGraphElement>> idToType =
             new HashMap<Long, Class<? extends IGraphElement>>();
 
-    private Map<Long, Set<Long>> nodeIdToIncidentEdgesIds =
+    protected Map<Long, Set<Long>> nodeIdToIncidentEdgesIds =
             new LinkedHashMap<Long, Set<Long>>();
 
-    private Map<Long, Integer> nodeIdToDegree = new HashMap<Long, Integer>();
+    protected Map<Long, Integer> nodeIdToDegree = new HashMap<Long, Integer>();
 
-    private Map<Long, Long> edgeIdToSourceNodeId = new HashMap<Long, Long>();
+    protected Map<Long, Long> edgeIdToSourceNodeId = new HashMap<Long, Long>();
 
-    private Map<Long, Long> edgeIdToTargetNodeId = new HashMap<Long, Long>();
+    protected Map<Long, Long> edgeIdToTargetNodeId = new HashMap<Long, Long>();
 
     /**
      * Constructs an empty graph.
@@ -87,100 +87,7 @@ public class UndirectedGraph implements IGraph {
         return this.edgeIdToSourceNodeId.size();
     }
     
-    /**
-     * Implements node objects for this graph.
-     */
-    protected class Node implements INode, Comparable<INode> {
-        private final long id;
-
-        /**
-         * Constructs a new node object.
-         * 
-         * @param id the id of this node.
-         */
-        public Node(final long id) {
-            this.id = id;
-        }
-
-        /*
-         * (non-Javadoc)
-         * 
-         * @see javaPGraphs.INode#degree()
-         */
-        public int degree() {
-            return ((Integer) nodeIdToDegree.get(id)).intValue();
-        }
-
-        /*
-         * (non-Javadoc)
-         * 
-         * @see javaPGraphs.IGraphElement#owner()
-         */
-        public IGraph owner() {
-            return UndirectedGraph.this;
-        }
-
-        /* (non-Javadoc)
-         * @see org.gavrog.joss.pgraphs.basic.INode#incidences()
-         */
-        public IteratorAdapter<IEdge> incidences() {
-            final Set<Long> ids = nodeIdToIncidentEdgesIds.get(this.id);
-            return new FilteredIterator<IEdge, Long>(ids.iterator()) {
-                public IEdge filter(final Long x) {
-                    if (edgeIdToSourceNodeId.get(x).equals(id())) {
-                        return new Edge(x, false);
-                    } else if (edgeIdToTargetNodeId.get(x).equals(id())) {
-                        return new Edge(x, true);
-                    } else {
-                        throw new RuntimeException("inconsistency in graph");
-                    }
-                }
-            };
-        }
-
-        /*
-         * (non-Javadoc)
-         * 
-         * @see javaPGraphs.IGraphElement#id()
-         */
-        public long id() {
-            return this.id;
-        }
-
-        /*
-         * (non-Javadoc)
-         * 
-         * @see java.lang.Object#equals(java.lang.Object)
-         */
-        public boolean equals(final Object other) {
-            if (other instanceof Node) {
-                final Node v = (Node) other;
-                return this.owner().id().equals(v.owner().id())
-                        && this.id == v.id();
-            } else {
-                return false;
-            }
-        }
-        
-        /* (non-Javadoc)
-         * @see java.lang.Object#hashCode()
-         */
-        public int hashCode() {
-            return this.owner().id().hashCode() * 37 + (int) id;
-        }
-        
-        /* (non-Javadoc)
-         * @see java.lang.Object#toString()
-         */
-        public String toString() {
-            return "Node " + id;
-        }
-
-        public int compareTo(final INode arg0) {
-            return (int) this.id() - (int) arg0.id();
-        }
-    }
-
+  
     /**
      * Implements edge objects for this graph.
      */
@@ -225,9 +132,9 @@ public class UndirectedGraph implements IGraph {
          */
         public INode source() {
             if (this.isReverse) {
-                return new Node(edgeIdToTargetNodeId.get(this.id()));
+                return new Node(UndirectedGraph.this,edgeIdToTargetNodeId.get(this.id()));
             } else {
-                return new Node(edgeIdToSourceNodeId.get(this.id()));
+                return new Node(UndirectedGraph.this,edgeIdToSourceNodeId.get(this.id()));
             }
         }
 
@@ -238,9 +145,9 @@ public class UndirectedGraph implements IGraph {
          */
         public INode target() {
             if (this.isReverse) {
-                return new Node(edgeIdToSourceNodeId.get(this.id()));
+                return new Node(UndirectedGraph.this,edgeIdToSourceNodeId.get(this.id()));
             } else {
-                return new Node(edgeIdToTargetNodeId.get(this.id()));
+                return new Node(UndirectedGraph.this,edgeIdToTargetNodeId.get(this.id()));
             }
         }
 
@@ -368,7 +275,7 @@ public class UndirectedGraph implements IGraph {
         return new FilteredIterator<INode, Long>(
                 this.nodeIdToIncidentEdgesIds.keySet().iterator()) {
             public INode filter(final Long x) {
-                return new Node(x);
+                return new Node(UndirectedGraph.this,x);
             }
         };
     }
@@ -389,7 +296,7 @@ public class UndirectedGraph implements IGraph {
 
 
     public INode getNode(long id) {
-        return new Node(id);
+        return new Node(UndirectedGraph.this,id);
     }
 
     public IEdge getEdge(long id) {
@@ -441,7 +348,7 @@ public class UndirectedGraph implements IGraph {
         this.idToType.put(id, Node.class);
         this.nodeIdToIncidentEdgesIds.put(id, new LinkedHashSet<Long>());
         this.nodeIdToDegree.put(id, new Integer(0));
-        return new Node(id);
+        return new Node(UndirectedGraph.this,id);
     }
 
     /* (non-Javadoc)
