@@ -2,7 +2,7 @@ function crystalData = loadCrystalData(path)
 
 %% this function was mostly written by Thi, but this should make it easier to read; 
 if(nargin<1)
- path = 'C:\matt\Documents\GitHub\DNA-NP-Prediction\MATLAB\newCCM\Crystal Database New.xlsx';
+ path = 'D:\Users\Matt\Documents\GitHub\DNA-NP-Prediction\MATLAB\newCCM\Crystal Database New.xlsx';
 end
 
 % Reading Excel Database
@@ -23,9 +23,9 @@ for i = 1:length(data)
     % First nearest neighbor
     A(1,:) = data(i,3:6);
     %     % Second nearest neighbor
-    %     A(2,:) = data(i,8:11);
+        A(2,:) = data(i,8:11);
     %     % Third nearest neighbor
-    %     A(3,:) = data(i,13:16);
+         A(3,:) = data(i,13:16);
     
     
     % Number of particle
@@ -34,7 +34,7 @@ for i = 1:length(data)
     B = B/min(B);
     
     % Distance
-    C = data(i,7);% data(i,12) data(i,17)];
+    C = [data(i,7) data(i,12) data(i,17)];
     
     % Correcting input order
     if (B(2) ~= 1)

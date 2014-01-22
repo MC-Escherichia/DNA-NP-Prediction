@@ -3,11 +3,11 @@
 
 %% load library
 
-global crystalData idx memoDB
+global crystalData memoDB
 % Creating compound name array
 
 crystalData = loadCrystalData(); 
-memoDB = java.util.concurrent.ConcurrentHashMap; 
+memoDB = javaObject('java.util.concurrent.ConcurrentHashMap'); 
 
 
 %% loop through all crystals in database
