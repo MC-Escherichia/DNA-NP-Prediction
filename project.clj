@@ -114,8 +114,6 @@
   ;; Options to pass to java compiler for java source,
   ;; exactly the same as command line arguments to javac.
                                         ; :javac-options ["-target" "1.6" "-source" "1.6" "-Xlint:-options"]
-  ;; Emit warnings on all reflection calls. - DEPRECATED (see below)
-  :warn-on-reflection true
   ;; Sets the values of global vars within Clojure. This example
   ;; disables all pre- and post-conditions and emits warnings on
   ;; reflective calls. See the Clojure documentation for the list of
