@@ -24,11 +24,12 @@
   ;; to specify a prefix. This prefix is used to extract natives in
   ;; jars that don't adhere to the default "<os>/<arch>/" layout that
   ;; Leiningen expects.
-  :dependencies [[org.clojure/clojure "1.3.0"]
+  :dependencies [[org.clojure/clojure "1.5.0"]
                  [criterium "0.4.2"]
                  [org.jogamp.gluegen/gluegen-rt-main "2.1.3"]
                  [org.jogamp.jogl/jogl-all-main "2.1.3"]
                  [local/jreality-native-deps "2014.01.15"]
+                 [junit/junit "4.10"]
                  [xstream/xstream "1.2.2"]]
 
   :plugins [[lein-pprint "1.1.1"]
@@ -124,7 +125,8 @@
   ;; set with the LEIN_JAVA_CMD environment variable.
                                         ;:java-cmd "/home/phil/bin/java1.7"
   ;; You can set JVM-level options here. The :java-opts key is an alias for this.
-  :jvm-opts ["-Xmx1g"]
+  :jvm-opts ["-Xmx1g"
+             "-Djava.awt.headless=false"]
   ;; Set the context in which your project code is evaluated. Defaults
   ;; to :subprocess, but can also be :leiningen (for plugins) or :nrepl
   ;; to connect to an existing project process over nREPL. A project nREPL
@@ -139,10 +141,10 @@
   ;; If you'd rather use a different directory structure, you can set these.
   ;; Paths that contain "inputs" are string vectors, "outputs" are strings.
   :source-paths ["src/clojure"]
-  :java-source-paths ["src/java" "test/java"] ; Java source is stored separately.
+  :java-source-paths ["src/java" ] ; Java source is stored separately.
 
   :junit ["test/java"]
-  :test-paths ["test" ]
+  :test-paths ["test/java" ]
   :resource-paths ["resources"] ; Non-code files included in classpath/jar.
   ;; All generated files will be placed in :target-path. In order to avoid
   ;; cross-profile contamination (for instance, uberjar classes interfering
