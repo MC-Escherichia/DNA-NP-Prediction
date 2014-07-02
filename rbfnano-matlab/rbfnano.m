@@ -61,19 +61,19 @@ str(cluster_ind,:) = [];
 good_data = sort_data;
 good_str = str; 
 
-test_frac = 0.80;
-frac_int = ceil(0.80*length(good_str)); 
+test_frac = 0.20;
+frac_int = ceil(test_frac*length(good_str)); 
 r = randperm(length(good_str));
 
 name2vec = @(x) arrayfun(@(i) strcmp(i,x),{'"AlB2"', '"Cr3Si"', '"CsCl"'});
 
 test_data = good_data(r(1:frac_int),:);
 test_str = good_str(r(1:frac_int)); 
-test_y = arrayfun(name2vec,test_str,'UniformOutput',false);
+test_y = cell2mat(arrayfun(name2vec,test_str,'UniformOutput',false));
  
 train_data = good_data(r(frac_int+1:end),:);
 train_str = good_str(r(frac_int+1:end),:);
-train_y = arrayfun(name2vec,test_str,'UniformOutput',false); 
+train_y = cell2mat(arrayfun(name2vec,train_str,'UniformOutput',false)); 
 
 
 % two hours later the data is ready
@@ -86,6 +86,8 @@ phi = @(r,s) exp(-r^2/s^2); % Gaussian
 % SEE RADIAL BASIS FUNCTIONS Pg 185
 
 %% RBF
+
+out = newrb(train_data',train_y',0.0,1.0);
 
 
 
