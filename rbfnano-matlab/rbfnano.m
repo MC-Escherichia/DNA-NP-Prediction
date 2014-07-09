@@ -162,4 +162,3 @@ testPerformance = perform(net,testTargets,outputs)
 % figure, plotconfusion(targets,outputs)
 % figure, plotroc(targets,outputs)
 % figure, ploterrhist(errors)
-Displaying rbf_nano.m.
