@@ -38,6 +38,14 @@ fafb1 = dataArray{:, 2};
 nbna1 = dataArray{:, 3};
 Structure = dataArray{:, 4};
 data = [rarb1,fafb1,nbna1];
+%% Be consistent about flipping the data
+flip_inds = find(rarb1 > 1);
+
+for i=flip_inds
+   data(i,:) = 1./data(i,:);
+end
+
+
 %% Clear temporary variables
 clearvars filename delimiter startRow formatSpec fileID dataArray ans;
 %% Split into train/test/validate data
@@ -60,32 +68,32 @@ str(cluster_ind,:) = [];
 % name2vec = @(x) arrayfun(@(i) strcmp(i,x),{'"AlB2"', '"Cr3Si"', '"CsCl"'});
 name2vec = @(x) arrayfun(@(i) strcmp(i,x),{'AlB2', 'Cr3Si', 'CsCl'});
 
-% rename variables 
+% rename variables
 good_data = sort_data;
-good_str = str; 
-good_y = cell2mat(arrayfun(@(v) double(name2vec(v)),str,'UniformOutput',false)); 
+good_str = str;
+good_y = cell2mat(arrayfun(@(v) double(name2vec(v)),str,'UniformOutput',false));
 
-test_frac = 0.20;
-frac_int = ceil(test_frac*length(good_str)); 
+test_frac = 0.60;
+frac_int = ceil(test_frac*length(good_str));
 %<------------------------------------------------------------------------------------------------------------------------>
 for b=1:10
     b
 r = randperm(length(good_str));
 clear train_data test_data test_y train_y
 test_data = good_data(r(1:frac_int),:);
-test_str = good_str(r(1:frac_int)); 
+test_str = good_str(r(1:frac_int));
 test_y = good_y(r(1:frac_int),:);
 % test_y = cell2mat(arrayfun(name2vec,test_str,'UniformOutput',false));
- 
+
 train_data = good_data(r(frac_int+1:end),:);
 train_str = good_str(r(frac_int+1:end),:);
-%train_y = cell2mat(arrayfun(name2vec,train_str,'UniformOutput',false)); 
+%train_y = cell2mat(arrayfun(name2vec,train_str,'UniformOutput',false));
 train_y = good_y(r(frac_int+1:end),:);
 
-% two hours later the data is ready
+
 %% Define transfer function
 
-phi = @(r,s) exp(-r^2/s^2); % Gaussian
+%phi = @(r,s) exp(-r^2/s^2); % Gaussian
 % @(r) r^3    % cubic
 % @(r) 1/(1+r) % cauchy
 
@@ -107,15 +115,15 @@ phi = @(r,s) exp(-r^2/s^2); % Gaussian
 % inputs = good_data';
 % targets = good_y';
 
-%% HOW DO WE FIND THE BEST s, and Q here 
-for s=1:1:300
-    for Q=1:3:60
+%% Loop over parameters
+for s=10:1:40
+    for Q=1:1:frac_int-5
 
-        net = newrb(train_data',train_y',0.0,s/1000,Q);
+        net = newrb(train_data',train_y',0.0,s/100,Q);
         [Y,Pf,Af,E,perf] = sim(net,test_data');
         data_mat(s,Q)=mse(Y-test_y');
     end
-    
+
 end
 master_mat=[master_mat;data_mat];
 end
@@ -129,7 +137,7 @@ j=1;
 while (j<=300)
     some=[];
 for i=j:300:3000
-   some=[some; master_mat(i,:)]; 
+   some=[some; master_mat(i,:)];
 end
 some_mat=[some_mat;mean(some)];
 j=j+1;
