@@ -11,3 +11,6 @@ target/
 .lein-failure
 .lein-failures
 .nrepl-port
+ml-clj/
+rbf-ml/
+*.xlsx
