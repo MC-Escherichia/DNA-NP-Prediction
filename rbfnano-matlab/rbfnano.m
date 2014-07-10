@@ -38,6 +38,14 @@ fafb1 = dataArray{:, 2};
 nbna1 = dataArray{:, 3};
 Structure = dataArray{:, 4};
 data = [rarb1,fafb1,nbna1];
+
+%% Be consistent about flipping the data
+flip_inds = find(rarb1 > 1);
+
+for i=flip_inds
+   data(i,:) = 1./data(i,:);
+end
+
 %% Clear temporary variables
 clearvars filename delimiter startRow formatSpec fileID dataArray ans;
 %% Split into train/test/validate data
@@ -65,20 +73,25 @@ good_data = sort_data;
 good_str = str;
 good_y = cell2mat(arrayfun(@(v) double(name2vec(v)),str,'UniformOutput',false));
 
-test_frac = 0.20;
+test_frac = 0.60;
 frac_int = ceil(test_frac*length(good_str));
 
-do_full_optimization= 0;
+do_full_optimization= 1;
 
-if do_full_optimization 
-    
-    for b=1:1
-   b
+if do_full_optimization
+    n = 5;
+else
+    n = 1;
+    s = 0.25;
+    Q = 40;
+end
+    for b=1:n
+         b
     r = randperm(length(good_str));
     clear train_data test_data test_y train_y
     test_data = good_data(r(1:frac_int),:);
     test_str = good_str(r(1:frac_int));
-    test_y = good_y(r(1:frac_int),:);
+    test_y = good_y(r(1:frac_int),:)
     % test_y = cell2mat(arrayfun(name2vec,test_str,'UniformOutput',false));
 
     train_data = good_data(r(frac_int+1:end),:);
@@ -89,50 +102,52 @@ if do_full_optimization
 
 %% RBF
 
-        for s=1:1:40
-         for Q=1:1:12
+       for s=1:5:40
+         for Q=1:3:12
 
-             net = newrb(train_data',train_y',0.0,s/100,Q*5);
+             net = newrb(train_data',train_y',0.0,s/1000,Q*5);
             [Y,Pf,Af,E,perf] = sim(net,test_data');
-            data_mat(s,Q)=mse(Y-test_y');
-         end
-   
-        end
+             data_mat(s,Q)=mse(Y-test_y');
+      end
+
+       end
     master_mat=[master_mat;data_mat];
     end
 
-end
+    error = mse(Y-test_y')
+
+
 
 %% Found 0.25 and 40 by putzing
 %%
 
-some_mat=[];
-j=1;
-while (j<=40)
-   some=[];
-for i=j:40:800
-  some=[some; master_mat(i,:)];
-end
-some_mat=[some_mat;mean(some)];
-j=j+1;
-end
+ some_mat=[];
+ j=1;
+ while (j<=40)
+    some=[];
+ for i=j:40:800
+   some=[some; master_mat(i,:)];
+   end
+ some_mat=[some_mat;mean(some)];
+ j=j+1;
+ end
 
 
 
 %%
 
 % Test the Network
-outputs = net(inputs);
-errors = gsubtract(targets,outputs);
-performance = perform(net,targets,outputs)
+outputs = net(test_data');
+errors = gsubtract(test_y',outputs);
+performance = perform(net,test_y',outputs)
 
 % Recalculate Training, Validation and Test Performance
-trainTargets = targets .* tr.trainMask{1};
-valTargets = targets  .* tr.valMask{1};
-testTargets = targets  .* tr.testMask{1};
-trainPerformance = perform(net,trainTargets,outputs)
-valPerformance = perform(net,valTargets,outputs)
-testPerformance = perform(net,testTargets,outputs)
+%trainTargets = targets .* tr.trainMask{1};
+%valTargets = targets  .* tr.valMask{1};
+%testTargets = targets  .* tr.testMask{1};
+%trainPerformance = perform(net,trainTargets,outputs)
+%valPerformance = perform(net,valTargets,outputs)
+%testPerformance = perform(net,testTargets,outputs)
 
 % View the Network
 % view(net)
@@ -141,6 +156,6 @@ testPerformance = perform(net,testTargets,outputs)
 % Uncomment these lines to enable various plots.
 % figure, plotperform(tr)
 % figure, plottrainstate(tr)
-% figure, plotconfusion(targets,outputs)
-% figure, plotroc(targets,outputs)
-% figure, ploterrhist(errors)
+ figure, plotconfusion(test_y',outputs)
+ figure, plotroc(test_y',outputs)
+ figure, ploterrhist(errors)
