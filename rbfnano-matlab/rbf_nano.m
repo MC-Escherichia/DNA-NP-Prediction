@@ -73,7 +73,7 @@ good_data = sort_data';
 good_y = cell2mat(arrayfun(@(v) double(name2vec(v)),str,'UniformOutput',false))';
 
 test_frac = 0.60;
-frac_int = ceil(test_frac*length(good_str));
+frac_int = ceil(test_frac*length(good_data));
 
 rbq = BufferedPriorityQueue(50);
 rbeq = BufferedPriorityQueue(50);
@@ -81,7 +81,7 @@ rbeq = BufferedPriorityQueue(50);
 for b=1:10
     b
     %% Sample Data
-r = randperm(length(good_str));
+r = randperm(length(good_data));
 clear train_data test_data test_y train_y
 
 test_data = good_data(:,r(1:frac_int));
@@ -93,11 +93,13 @@ train_y = good_y(:,r(frac_int+1:end));
 
 
 %% Loop over parameters
-for s=1:1:200
+for s=1:1:25
+
     for Q=1:1:length(good_data)-frac_int-5
+
         %% Train regular net
-        rb_net = our_newrb(train_data,train_y,s/50,Q);
-        [Y,Pf,Af,E,perf] = sim(rb_net,test_data);
+        rb_net = our_newrb(train_data,train_y,s/6.25,Q);
+        Y = sim(rb_net,test_data);
         err = mse(Y-test_y);
         rb_data_mat(s,Q)= err;
 
@@ -105,7 +107,7 @@ for s=1:1:200
 
         %% Train zero error net
         e_errors = zeros(10,1);
-        for c =1:10
+        for c =1:3
             r = randperm(length(train_data));
             train_exact = train_data(:,r(1:Q));
             train_exact_y = train_y(:,r(1:Q));
