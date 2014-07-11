@@ -1,20 +1,21 @@
-function [net perf] = our_newrb(param)
+function [net perf] = our_newrb(points,targets,spread,maxNeurons)
 
+net = create_network(points,targets,spread,maxNeurons);
 
 end
 
 
-function net = create_network(param)
+function net = create_network(p,t,sp,mn)
 
   % Data
-  p = param.inputs;
-  t = param.targets;
+%p = param.inputs;
+% t = param.targets;
   if iscell(p), p = cell2mat(p); end
   if iscell(t), t = cell2mat(t); end
 
   % Max Neurons
   Q = size(p,2);
-  mn = param.maxNeurons;
+  % mn = param.maxNeurons;
   if (mn > Q), mn = Q; end
 
 
@@ -38,11 +39,9 @@ function net = create_network(param)
   net.performFcn = 'mse';
 
   % Design Weights and Bias Values
-  warn1 = warning('off','MATLAB:rankDeficientMatrix');
-  warn2 = warning('off','MATLAB:nearlySingularMatrix');
-  [w1,b1,w2,b2,tr] = designrb(p,t,param.goal,param.spread,mn,param.displayFreq);
-  warning(warn1.state,warn1.identifier);
-  warning(warn2.state,warn2.identifier);
+
+  [w1,b1,w2,b2] = designrb(p,t,0.0,sp,mn);
+
 
   net.layers{1}.size = length(b1);
   net.b{1} = b1;
@@ -52,11 +51,11 @@ function net = create_network(param)
 end
 
 %======================================================
-function [w1,b1,w2,b2,tr] = designrb(p,t,eg,sp,mn,df)
+function [w1,b1,w2,b2] = designrb(p,t,eg,sp,mn)
 
   [r,q] = size(p);
   [s2,q] = size(t);
-  b = sqrt(-log(.5))/sp;
+  b = sqrt(log(2))/sp;
 
   % RADIAL BASIS LAYER OUTPUTS
   P = radbas(dist(p',p)*b);
@@ -85,13 +84,6 @@ function [w1,b1,w2,b2,tr] = designrb(p,t,eg,sp,mn,df)
   MSE = mse(t-a2);
 
   % Start
-  tr = nntraining.newtr(mn,'perf');
-  tr.perf(1) = mse(t-repmat(mean(t,2),1,q));
-  tr.perf(2) = MSE;
-  if isfinite(df)
-    fprintf('NEWRB, neurons = 0, MSE = %g\n',tr.perf(1));
-  end
-  flag_stop=plotperfrb(tr,eg,'NEWRB',0);
 
   iterations = min(mn,q);
   for k = 2:iterations
@@ -118,18 +110,8 @@ function [w1,b1,w2,b2,tr] = designrb(p,t,eg,sp,mn,df)
     a2 = w2*a1 + b2*ones(1,q);
     MSE = mse(t-a2);
 
-    % PROGRESS
-    tr.perf(k+1) = MSE;
-
-    % DISPLAY
-    if isfinite(df) & (~rem(k,df))
-      fprintf('NEWRB, neurons = %g, MSE = %g\n',k,MSE);
-      flag_stop=plotperfrb(tr,eg,'NEWRB',k);
-    end
-
     % CHECK ERROR
     if (MSE < eg), break, end
-    if (flag_stop), break, end
 
   end
 
@@ -138,7 +120,7 @@ function [w1,b1,w2,b2,tr] = designrb(p,t,eg,sp,mn,df)
 
   % Finish
   if isempty(k), k = 1; end
-  tr = nntraining.cliptr(tr,k);
+
 end
 
 %======================================================

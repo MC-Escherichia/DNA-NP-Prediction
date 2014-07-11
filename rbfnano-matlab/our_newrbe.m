@@ -24,7 +24,7 @@ function net = create_network(p,t,sp)
   net.outputs{2}.exampleOutput = t;
 
   % Weight and Bias Values
-  [w1,b1,w2,b2] = designrbe(p,t,param.spread);
+  [w1,b1,w2,b2] = designrbe(p,t,sp);
 
   net.b{1} = b1;
   net.iw{1,1} = w1;
