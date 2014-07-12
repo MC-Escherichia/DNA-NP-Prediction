@@ -78,8 +78,10 @@ frac_int = ceil(test_frac*length(good_data));
 rbq = BufferedPriorityQueue(50);
 rbeq = BufferedPriorityQueue(50);
 
+
+res = {};
 for b=1:10
-    b
+
     %% Sample Data
 r = randperm(length(good_data));
 clear train_data test_data test_y train_y
@@ -93,51 +95,62 @@ train_y = good_y(:,r(frac_int+1:end));
 
 
 %% Loop over parameters
-for s=1:1:25
+for Q=5:1:length(good_data)-frac_int-5
+    s= 0.1;
+    i = 1;
+    step = 0.25;
+    m = java.util.HashMap;
+    while s<= 4.0
 
-    for Q=1:1:length(good_data)-frac_int-5
+
 
         %% Train regular net
-        rb_net = our_newrb(train_data,train_y,s/6.25,Q);
+        rb_net = our_newrb(train_data,train_y,s,Q);
         Y = sim(rb_net,test_data);
         err = mse(Y-test_y);
-        rb_data_mat(s,Q)= err;
+        %rb_data_mat(s,Q)= err;
 
         rbq.insert(err,rb_net);
-
-        %% Train zero error net
-        e_errors = zeros(10,1);
-        for c =1:3
-            r = randperm(length(train_data));
-            train_exact = train_data(:,r(1:Q));
-            train_exact_y = train_y(:,r(1:Q));
-            rbe_net = our_newrbe(train_exact,train_exact_y,s/50);
-            e_Y = sim(rbe_net,test_data);
-            e_err = mse(e_Y-test_y);
-            rbeq.insert(e_err,rbe_net);
-            e_errors(c) = e_err;
+        res{i,Q,b} = [s err];
+        if err<0.08 && step >0.05
+                s = s - step;
+                step = 0.05;
+        elseif err<0.15  && step ~= 0.1
+            s = s-step;
+            step = .1;
+        else
+            step = 0.25;
         end
-        rbe_data_mat(s,Q)= mean(e_errors);
+
+        s = s + step;
+        i = i + 1;
+        %% Train zero error net
+      % e_errors = zeros(10,1);
+      % for c =1:3
+      %     r = randperm(length(train_data));
+      %     train_exact = train_data(:,r(1:Q));
+      %     train_exact_y = train_y(:,r(1:Q));
+      %     rbe_net = our_newrbe(train_exact,train_exact_y,s/50);
+      %     e_Y = sim(rbe_net,test_data);
+      %     e_err = mse(e_Y-test_y);
+      %     rbeq.insert(e_err,rbe_net);
+      %     e_errors(c) = e_err;
+      % end
+      % rbe_data_mat(s,Q)= mean(e_errors);
     end
 
 end
-rbe_master_mat=[rb_master_mat; rbe_data_mat];
-rb_master_mat=[rb_master_mat;rb_data_mat];
+
+
 end
 
 
 %%
 
-some_mat=[];
-j=1;
-while (j<=300)
-    some=[];
-for i=j:300:3000
-   some=[some; master_mat(i,:)];
-end
-some_mat=[some_mat;mean(some)];
-j=j+1;
-end
+save('results.mat','res');
+save('nets.mat','rbq');
+% do something with res
+% do something with rbq
 
 
 
