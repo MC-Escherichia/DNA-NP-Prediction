@@ -30,7 +30,7 @@ reduced = []
 
 v = sorted(1,:);
 for i=2:length(sorted)
-    r = sorted(i,:)
+    r = sorted(i,:);
     if v(1)==r(1) && v(3)==r(3)
         v(4) = (v(4) + r(4))/2;
     else
@@ -40,5 +40,16 @@ for i=2:length(sorted)
     end
 
 end
-reduced = reduced(find(reduced(:,3)<3 ));
-scatter3(reduced(:,1),reduced(:,3),reduced(:,4));
+
+
+
+error = reduced(:,4);
+clipped= reduced(find(error<0.1),:); % trying to see closer.
+
+
+%% This plot is hideous, apoorv can you do any better, but X=15 and
+%% s = 0.5 seem to make sense.
+scatter3(clipped(:,1),clipped(:,3),clipped (:,4));
+% if we want a surface plot we need to reduced cols 1 and 3 to just
+% their values, and place the correspondings errors in a Z matrix,
+% with NaN's for when we don't know the answe.

@@ -99,7 +99,7 @@ for Q=5:1:length(good_data)-frac_int-5
     s= 0.1;
     i = 1;
     step = 0.25;
-    m = java.util.HashMap;
+
     while s<= 4.0
 
 
@@ -112,17 +112,18 @@ for Q=5:1:length(good_data)-frac_int-5
 
         rbq.insert(err,rb_net);
         res{i,Q,b} = [s err];
-        if err<0.08 && step >0.05
+        if err < 0.04 && step > 0.05
                 s = s - step;
                 step = 0.05;
-        elseif err<0.15  && step ~= 0.1
+        elseif err < 0.10  && step > 0.1
             s = s-step;
             step = .1;
-        else
+        elseif err > 0.15 && step < 0.25
             step = 0.25;
         end
 
         s = s + step;
+        disp([err s step])
         i = i + 1;
         %% Train zero error net
       % e_errors = zeros(10,1);
