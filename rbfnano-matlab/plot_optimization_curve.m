@@ -44,7 +44,7 @@ end
 
 
 error = reduced(:,4);
-clipped= reduced(find(error<0.1),:); % trying to see closer.
+clipped= reduced(find(error<0.2),:); % trying to see closer.
 
 
 %% This plot is hideous, apoorv can you do any better, but X=15 and
