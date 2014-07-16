@@ -1,7 +1,7 @@
 function [w1,b1,w2,b2] = designrb_fast(p,t,eg,sp,mn)
 
   [r,q] = size(p);
-  [s2,q] = size(t);
+  %[s2,q] = size(t);
   b = sqrt(log(2))/sp;
 
   % RADIAL BASIS LAYER OUTPUTS
@@ -62,11 +62,11 @@ function [w1,b1,w2,b2] = designrb_fast(p,t,eg,sp,mn)
 
   end
 
-  [S1,R] = size(w1);
-  b1 = ones(S1,1)*b;
+   [S1,R] = size(w1);
+   b1 = ones(S1,1)*b;
 
   % Finish
-  if isempty(k), k = 1; end
+  %  if isempty(k), k = 1; end
 
 end
 
