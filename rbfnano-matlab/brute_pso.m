@@ -119,10 +119,9 @@ format long;
 pop=[];
 fitness=[];
 for i=1:N
-    pop=[pop;(rand*(range(2)-range(1))+range(1)) round(rand* ...
-                                                      (range(4)-range(3))+range(3))];
-    ff = fitfast(pop(1,:),train_data,train_y,val_data,val_y)
-    fitness=[fitness;ff];
+    pop=[pop;(rand*(range(2)-range(1))+range(1)) round(rand*(range(4)-range(3))+range(3))];
+    fitness=[fitness;fitf(pop(i,:),train_data,train_y,val_data,val_y)];
+
 
 end
 % Population assigned random positions
@@ -170,29 +169,22 @@ y=[gbest fitg(I,1)];
 
 end
 
-function y=fitfslow(pop,train_data,train_y,val_data,val_y)
+
+function y=fitf(pop,train_data,train_y,val_data,val_y)
+
 s=pop(1,1);
 Q=pop(1,2);
 [r c depth]=size(train_data);
 
-for g=1:depth
-        net = newrb(train_data(:,:,g)',train_y(:,:,g)',0.0,s,Q);
-        Y = sim(net,val_data(:,:,g)');
-        ym(1,g)=mse(Y-val_y(:,:,g)');
-end
-y=mean(ym)+var(ym);
-end
 
-function y=fitfast(pop,train_data,train_y,val_data,val_y)
- s=pop(1,1);
- Q=pop(1,2);
- [r c depth]=size(train_data);
 
 
  for g=1:depth
          [w1f,bf,w2f,b2f] = trainrb(train_data(:,:,g)',train_y(:,:,g)',0.0,s,Q);
-         Y = testrb(w1f,bf,w2f,b2f,val_data(:,:,g)',val_y(:,:,g)');
-         ym(1,g)=mse(Y-val_y(:,:,g)');
+
+         ym(1,g) = testrb(w1f,bf,w2f,b2f,val_data(:,:,g)',val_y(:,:,g)');
+
+
  end
  y=mean(ym)+var(ym);
  end
