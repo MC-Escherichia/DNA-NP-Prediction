@@ -8,9 +8,9 @@ startRow = 2;
 
 %% Format string for each line of text:
 %   column1: double (%f)
-%	column2: double (%f)
+% column2: double (%f)
 %   column3: double (%f)
-%	column4: text (%s)
+% column4: text (%s)
 % For more information, see the TEXTSCAN documentation.
 formatSpec = '%f%f%f%s%[^\n\r]';
 
@@ -38,13 +38,13 @@ fafb1 = dataArray{:, 2};
 nbna1 = dataArray{:, 3};
 Structure = dataArray{:, 4};
 data = [rarb1,fafb1,nbna1];
+
 %% Be consistent about flipping the data
 flip_inds = find(rarb1 > 1);
 
 for i=flip_inds
    data(i,:) = 1./data(i,:);
 end
-
 
 %% Clear temporary variables
 clearvars filename delimiter startRow formatSpec fileID dataArray ans;
@@ -69,107 +69,87 @@ str(cluster_ind,:) = [];
 name2vec = @(x) arrayfun(@(i) strcmp(i,x),{'AlB2', 'Cr3Si', 'CsCl'});
 
 % rename variables
-good_data = sort_data';
-good_y = cell2mat(arrayfun(@(v) double(name2vec(v)),str,'UniformOutput',false))';
+good_data = sort_data;
+good_str = str;
+good_y = cell2mat(arrayfun(@(v) double(name2vec(v)),str,'UniformOutput',false));
 
 test_frac = 0.60;
-frac_int = ceil(test_frac*length(good_data));
+frac_int = ceil(test_frac*length(good_str));
 
-rbq = BufferedPriorityQueue(50);
-rbeq = BufferedPriorityQueue(50);
+do_full_optimization= 1;
 
+if do_full_optimization
+    n = 5;
+else
+    n = 1;
+    s = 0.25;
+    Q = 40;
+end
+    for b=1:n
+         b
+    r = randperm(length(good_str));
+    clear train_data test_data test_y train_y
+    test_data = good_data(r(1:frac_int),:);
+    test_str = good_str(r(1:frac_int));
+    test_y = good_y(r(1:frac_int),:)
+    % test_y = cell2mat(arrayfun(name2vec,test_str,'UniformOutput',false));
 
-res = {};
-for b=1:10
-
-    %% Sample Data
-r = randperm(length(good_data));
-clear train_data test_data test_y train_y
-
-test_data = good_data(:,r(1:frac_int));
-test_y = good_y(:,r(1:frac_int));
-
-
-train_data = good_data(:,r(frac_int+1:end));
-train_y = good_y(:,r(frac_int+1:end));
-
-
-%% Loop over parameters
-for Q=5:1:length(good_data)-frac_int-5
-    s= 0.1;
-    i = 1;
-    step = 0.25;
-
-    while s<= 4.0
+    train_data = good_data(r(frac_int+1:end),:);
+    train_str = good_str(r(frac_int+1:end),:);
+    %train_y = cell2mat(arrayfun(name2vec,train_str,'UniformOutput',false));
+    train_y = good_y(r(frac_int+1:end),:);
 
 
+    %%% CREATE CONFLICT!
+%% RBF
 
-        %% Train regular net
-        rb_net = our_newrb(train_data,train_y,s,Q);
-        Y = sim(rb_net,test_data);
-        err = mse(Y-test_y);
-        %rb_data_mat(s,Q)= err;
+       for s=1:5:40
+         for Q=1:3:12
 
-        rbq.insert(err,rb_net);
-        res{i,Q,b} = [s err];
-        if err < 0.04 && step > 0.05
-                s = s - step;
-                step = 0.05;
-        elseif err < 0.10  && step > 0.1
-            s = s-step;
-            step = .1;
-        elseif err > 0.15 && step < 0.25
-            step = 0.25;
-        end
+             net = newrb(train_data',train_y',0.0,s/1000,Q*5);
+            [Y,Pf,Af,E,perf] = sim(net,test_data');
+             data_mat(s,Q)=mse(Y-test_y');
+      end
 
-        s = s + step;
-        disp([err s step])
-        i = i + 1;
-        %% Train zero error net
-      % e_errors = zeros(10,1);
-      % for c =1:3
-      %     r = randperm(length(train_data));
-      %     train_exact = train_data(:,r(1:Q));
-      %     train_exact_y = train_y(:,r(1:Q));
-      %     rbe_net = our_newrbe(train_exact,train_exact_y,s/50);
-      %     e_Y = sim(rbe_net,test_data);
-      %     e_err = mse(e_Y-test_y);
-      %     rbeq.insert(e_err,rbe_net);
-      %     e_errors(c) = e_err;
-      % end
-      % rbe_data_mat(s,Q)= mean(e_errors);
+       end
+    master_mat=[master_mat;data_mat];
     end
 
-end
+    error = mse(Y-test_y')
 
 
-end
 
-
+%% Found 0.25 and 40 by putzing
 %%
 
-save('results.mat','res');
-save('nets.mat','rbq');
-% do something with res
-% do something with rbq
+ some_mat=[];
+ j=1;
+ while (j<=40)
+    some=[];
+ for i=j:40:800
+   some=[some; master_mat(i,:)];
+   end
+ some_mat=[some_mat;mean(some)];
+ j=j+1;
+ end
 
 
 
 %%
 
 % Test the Network
-% outputs = net(inputs);
-% errors = gsubtract(targets,outputs);
-% performance = perform(net,targets,outputs)
-%
+outputs = net(test_data');
+errors = gsubtract(test_y',outputs);
+performance = perform(net,test_y',outputs)
+
 % Recalculate Training, Validation and Test Performance
-% trainTargets = targets .* tr.trainMask{1};
-% valTargets = targets  .* tr.valMask{1};
-% testTargets = targets  .* tr.testMask{1};
-% trainPerformance = perform(net,trainTargets,outputs)
-% valPerformance = perform(net,valTargets,outputs)
-% testPerformance = perform(net,testTargets,outputs)
-%
+%trainTargets = targets .* tr.trainMask{1};
+%valTargets = targets  .* tr.valMask{1};
+%testTargets = targets  .* tr.testMask{1};
+%trainPerformance = perform(net,trainTargets,outputs)
+%valPerformance = perform(net,valTargets,outputs)
+%testPerformance = perform(net,testTargets,outputs)
+
 % View the Network
 % view(net)
 
@@ -177,6 +157,6 @@ save('nets.mat','rbq');
 % Uncomment these lines to enable various plots.
 % figure, plotperform(tr)
 % figure, plottrainstate(tr)
-% figure, plotconfusion(targets,outputs)
-% figure, plotroc(targets,outputs)
-% figure, ploterrhist(errors)
+ figure, plotconfusion(test_y',outputs)
+ figure, plotroc(test_y',outputs)
+ figure, ploterrhist(errors)

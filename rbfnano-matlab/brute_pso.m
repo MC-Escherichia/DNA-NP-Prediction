@@ -112,15 +112,17 @@ end
 yb=pso_mat;
 end
 
-function y=pso_eng(N,iterations,range,train_data,train_y,val_data,val_y)
+function y = pso_eng(N,iterations,range,train_data,train_y,val_data,val_y)
 % Create a population of agents having random positions. Positions will be
 % s and Q
 format long;
 pop=[];
 fitness=[];
 for i=1:N
-    pop=[pop;(rand*(range(2)-range(1))+range(1)) round(rand*(range(4)-range(3))+range(3))];
-    fitness=[fitness;fitf(pop(1,:),train_data,train_y,val_data,val_y)];
+    pop=[pop;(rand*(range(2)-range(1))+range(1)) round(rand* ...
+                                                      (range(4)-range(3))+range(3))];
+    ff = fitfast(pop(1,:),train_data,train_y,val_data,val_y)
+    fitness=[fitness;ff];
 
 end
 % Population assigned random positions
@@ -168,7 +170,7 @@ y=[gbest fitg(I,1)];
 
 end
 
-function [y info]=fitfslow(pop,train_data,train_y,val_data,val_y)
+function y=fitfslow(pop,train_data,train_y,val_data,val_y)
 s=pop(1,1);
 Q=pop(1,2);
 [r c depth]=size(train_data);
@@ -181,7 +183,7 @@ end
 y=mean(ym)+var(ym);
 end
 
-function [y info]=fitfast(pop,train_data,train_y,val_data,val_y)
+function y=fitfast(pop,train_data,train_y,val_data,val_y)
  s=pop(1,1);
  Q=pop(1,2);
  [r c depth]=size(train_data);
