@@ -70,9 +70,9 @@ str(cluster_ind,:) = [];
 % name2vec = @(x) arrayfun(@(i) strcmp(i,x),{'"AlB2"', '"Cr3Si"', '"CsCl"'});
 name2vec = @(x) arrayfun(@(i) strcmp(i,x),{'AlB2', 'Cr3Si', 'CsCl'});
 
-% rename variables 
+% rename variables
 good_data = sort_data;
-good_str = str; 
+good_str = str;
 good_y = cell2mat(arrayfun(@(v) double(name2vec(v)),str,'UniformOutput',false));
 [C R]=size(good_data)
 % Now you have to divide the good_data into training, validation and test
@@ -84,7 +84,7 @@ for i=30
     for j=30
         if((i+j)>30 && (i+j)<(C-1))
         for k=1:10
-           
+
            index_mat=randperm(C);
            train_data(:,:,k)=good_data(index_mat(1:i),:);
            train_y(:,:,k)=good_y(index_mat(1:i),:);
@@ -121,7 +121,7 @@ fitness=[];
 for i=1:N
     pop=[pop;(rand*(range(2)-range(1))+range(1)) round(rand*(range(4)-range(3))+range(3))];
     fitness=[fitness;fitf(pop(1,:),train_data,train_y,val_data,val_y)];
-    
+
 end
 % Population assigned random positions
 
@@ -152,7 +152,7 @@ for iter=1:iterations
     end
     pop1=[pop1(:,1) round(pop1(:,2))];
     % Now check fitness
-    for jm=1:N 
+    for jm=1:N
         fitness1(jm,1)=fitf(pop1(jm,:),train_data,train_y,val_data,val_y);
         if (fitness1(jm,1)<fitness(jm,1))
             pbest(jm,:)=pop1(jm,:);
@@ -161,14 +161,14 @@ for iter=1:iterations
     end
     % Updated the Pbest. Now its Gbest's turn.
     [C I]=min(fitg);
-    gbest=pbest(I,:);   
+    gbest=pbest(I,:);
 end
 
 y=[gbest fitg(I,1)];
 
 end
 
-function y=fitf(pop,train_data,train_y,val_data,val_y)           
+function [y info]=fitfslow(pop,train_data,train_y,val_data,val_y)
 s=pop(1,1);
 Q=pop(1,2);
 [r c depth]=size(train_data);
@@ -181,128 +181,128 @@ end
 y=mean(ym)+var(ym);
 end
 
-% function y=fitf(pop,train_data,train_y,val_data,val_y)           
-% s=pop(1,1);
-% Q=pop(1,2);
-% [r c depth]=size(train_data);
-% 
-% 
-% for g=1:depth
-%         [w1f,bf,w2f,b2f] = trainrb(train_data(:,:,g)',train_y(:,:,g)',0.0,s,Q);
-%         Y = testrb(w1f,bf,w2f,b2f,val_data(:,:,g)',val_y(:,:,g)');
-%         ym(1,g)=mse(Y-val_y(:,:,g)');
-% end
-% y=mean(ym)+var(ym);
-% end
-% 
-% function [w1,b,w2,b2] = trainrb(p,t,eg,sp,mn)
-% % eg=0
-% % sp = s
-% % mn = Q
-% % p = train_data
-% % t = train_y
-% 
-%   [r,q] = size(p);
-%   [s2,q] = size(t);
-%   b = sqrt(log(2))/sp;
-% 
-%   % RADIAL BASIS LAYER OUTPUTS
-%   P = radbas(dist(p',p)*b);
-%   PP = sum(P.*P)';
-%   d = t';
-%   dd = sum(d.*d)';
-% 
-%   % CALCULATE "ERRORS" ASSOCIATED WITH VECTORS
-%   e = ((P' * d)' .^ 2) ./ (dd * PP');
-% 
-%   % PICK VECTOR WITH MOST "ERROR"
-%   pick = findLargeColumn(e);
-%   used = [];
-%   left = 1:q;
-%   W = P(:,pick);
-%   P(:,pick) = []; PP(pick,:) = [];
-%   e(:,pick) = [];
-%   used = [used left(pick)];
-%   left(pick) = [];
-% 
-%   % CALCULATE ACTUAL ERROR
-%   w1 = p(:,used)';
-%   % ONCE YOU HAVE W1, you can find MSE by setting p to target
-%   a1 = radbas(dist(w1,p)*b);
-%   [w2,b2] = solvelin2(a1,t);
-%   a2 = w2*a1 + b2*ones(1,q);
-%   MSE = mse(t-a2);
-% 
-%   % Start
-% 
-%   iterations = min(mn,q);
-%   for k = 2:iterations
-% 
-%     % CALCULATE "ERRORS" ASSOCIATED WITH VECTORS
-%     wj = W(:,k-1);
-%     a = wj' * P / (wj'*wj);
-%     P = P - wj * a;
-%     PP = sum(P.*P)';
-%     e = ((P' * d)' .^ 2) ./ (dd * PP');
-% 
-%     % PICK VECTOR WITH MOST "ERROR"
-%     pick = findLargeColumn(e);
-%     W = [W, P(:,pick)];
-%     P(:,pick) = []; PP(pick,:) = [];
-%     e(:,pick) = [];
-%     used = [used left(pick)];
-%     left(pick) = [];
-% 
-%     % CALCULATE ACTUAL ERROR
-%     w1 = p(:,used)';
-%     a1 = radbas(dist(w1,p)*b);
-%     [w2,b2] = solvelin2(a1,t);
-%     a2 = w2*a1 + b2*ones(1,q);
-%     MSE = mse(t-a2);
-% 
-%     % CHECK ERROR
-%     if (MSE < eg), break, end
-% 
-%   end
-% 
-%   [S1,R] = size(w1);
-% %  b1 = ones(S1,1)*b;
-% 
-%   % Finish
-%   if isempty(k), k = 1; end
-% 
-% end
-% 
-% function err = testrb(w1,b,w2,b2,p,t)
-% %p = val_data
-% %t = val_y
-%   %b = sqrt(log(2))/sp;
-%   [r,q] = size(p);
-%     a1 = radbas(dist(w1,p)*b);
-%  %   [w2,b2] = solvelin2(a1,t);
-%     a2 = w2*a1 + b2*ones(1,q);
-%     err = mse(t-a2);
-% 
-% end
-% %======================================================
-% 
-% function i = findLargeColumn(m)
-%   replace = find(isnan(m));
-%   m(replace) = zeros(size(replace));
-%   m = sum(m .^ 2,1);
-%   i = find(m == max(m));
-%   i = i(1);
-% end
-% 
-% %======================================================
-% 
-% function [w,b] = solvelin2(p,t)
-%   if nargout <= 1
-%     w= t/p;
-%   else
-%     [pr,pc] = size(p);
-%     x = t/[p; ones(1,pc)];
-%     w = x(:,1:pr);
-%     b = x(:,pr+1);
-%   end
-% end
+function [y info]=fitfast(pop,train_data,train_y,val_data,val_y)
+ s=pop(1,1);
+ Q=pop(1,2);
+ [r c depth]=size(train_data);
+
+
+ for g=1:depth
+         [w1f,bf,w2f,b2f] = trainrb(train_data(:,:,g)',train_y(:,:,g)',0.0,s,Q);
+         Y = testrb(w1f,bf,w2f,b2f,val_data(:,:,g)',val_y(:,:,g)');
+         ym(1,g)=mse(Y-val_y(:,:,g)');
+ end
+ y=mean(ym)+var(ym);
+ end
+
+ function [w1,b,w2,b2] = trainrb(p,t,eg,sp,mn)
+ % eg=0
+ % sp = s
+ % mn = Q
+ % p = train_data
+ % t = train_y
+
+   [r,q] = size(p);
+   [s2,q] = size(t);
+   b = sqrt(log(2))/sp;
+
+   % RADIAL BASIS LAYER OUTPUTS
+   P = radbas(dist(p',p)*b);
+   PP = sum(P.*P)';
+   d = t';
+   dd = sum(d.*d)';
+
+   % CALCULATE "ERRORS" ASSOCIATED WITH VECTORS
+   e = ((P' * d)' .^ 2) ./ (dd * PP');
+
+   % PICK VECTOR WITH MOST "ERROR"
+   pick = findLargeColumn(e);
+   used = [];
+   left = 1:q;
+   W = P(:,pick);
+   P(:,pick) = []; PP(pick,:) = [];
+   e(:,pick) = [];
+   used = [used left(pick)];
+   left(pick) = [];
+
+   % CALCULATE ACTUAL ERROR
+   w1 = p(:,used)';
+   % ONCE YOU HAVE W1, you can find MSE by setting p to target
+   a1 = radbas(dist(w1,p)*b);
+   [w2,b2] = solvelin2(a1,t);
+   a2 = w2*a1 + b2*ones(1,q);
+   MSE = mse(t-a2);
+
+   % Start
+
+   iterations = min(mn,q);
+   for k = 2:iterations
+
+     % CALCULATE "ERRORS" ASSOCIATED WITH VECTORS
+     wj = W(:,k-1);
+     a = wj' * P / (wj'*wj);
+     P = P - wj * a;
+     PP = sum(P.*P)';
+     e = ((P' * d)' .^ 2) ./ (dd * PP');
+
+     % PICK VECTOR WITH MOST "ERROR"
+     pick = findLargeColumn(e);
+     W = [W, P(:,pick)];
+     P(:,pick) = []; PP(pick,:) = [];
+     e(:,pick) = [];
+     used = [used left(pick)];
+     left(pick) = [];
+
+     % CALCULATE ACTUAL ERROR
+     w1 = p(:,used)';
+     a1 = radbas(dist(w1,p)*b);
+     [w2,b2] = solvelin2(a1,t);
+     a2 = w2*a1 + b2*ones(1,q);
+     MSE = mse(t-a2);
+
+     % CHECK ERROR
+     if (MSE < eg), break, end
+
+   end
+
+   [S1,R] = size(w1);
+ %  b1 = ones(S1,1)*b;
+
+   % Finish
+   if isempty(k), k = 1; end
+
+ end
+
+ function err = testrb(w1,b,w2,b2,p,t)
+ %p = val_data
+ %t = val_y
+   %b = sqrt(log(2))/sp;
+   [r,q] = size(p);
+     a1 = radbas(dist(w1,p)*b);
+  %   [w2,b2] = solvelin2(a1,t);
+     a2 = w2*a1 + b2*ones(1,q);
+     err = mse(t-a2);
+
+ end
+ %======================================================
+
+ function i = findLargeColumn(m)
+   replace = find(isnan(m));
+   m(replace) = zeros(size(replace));
+   m = sum(m .^ 2,1);
+   i = find(m == max(m));
+   i = i(1);
+ end
+
+ %======================================================
+
+ function [w,b] = solvelin2(p,t)
+   if nargout <= 1
+     w= t/p;
+   else
+     [pr,pc] = size(p);
+     x = t/[p; ones(1,pc)];
+     w = x(:,1:pr);
+     b = x(:,pr+1);
+   end
+ end
