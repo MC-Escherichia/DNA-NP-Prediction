@@ -189,8 +189,8 @@ Q=pop(1,2);
 
  for g=1:depth
          [w1f,bf,w2f,b2f] = trainrb(train_data(:,:,g)',train_y(:,:,g)',0.0,s,Q);
-         Y = testrb(w1f,bf,w2f,b2f,val_data(:,:,g)',val_y(:,:,g)');
-         ym(1,g)=mse(Y-val_y(:,:,g)');
+         ym(1,g) = testrb(w1f,bf,w2f,b2f,val_data(:,:,g)',val_y(:,:,g)');
+
  end
  y=mean(ym)+var(ym);
  end
