@@ -4,8 +4,11 @@
 % Create the subdivision of data.
 % Pass this data to PSO func.
 % Then the PSO will run
+function yb=brute_pso ()
+    yb = brute_pso1 (20,20);
+end
+function yb=brute_pso1(N,iterations)
 
-function yb=brute_pso(N,iterations)
 % Create a for loop
 
 warning('off','all');
@@ -120,8 +123,11 @@ pop=[];
 fitness=[];
 for i=1:N
     pop=[pop;(rand*(range(2)-range(1))+range(1)) round(rand* ...
-                                                      (range(4)-range(3))+range(3))];
-    ff = fitfast(pop(1,:),train_data,train_y,val_data,val_y)
+                                                      (range(4)- ...
+                                                      range(3))+range(3))];
+
+    ff = fitfast(pop(i,:),train_data,train_y,val_data,val_y)
+    % fs = fitfslow(pop(1,:),train_data,train_y,val_data,val_y)
     fitness=[fitness;ff];
 
 end
@@ -155,7 +161,7 @@ for iter=1:iterations
     pop1=[pop1(:,1) round(pop1(:,2))];
     % Now check fitness
     for jm=1:N
-        fitness1(jm,1)=fitf(pop1(jm,:),train_data,train_y,val_data,val_y);
+        fitness1(jm,1)=fitfast(pop1(jm,:),train_data,train_y,val_data,val_y);
         if (fitness1(jm,1)<fitness(jm,1))
             pbest(jm,:)=pop1(jm,:);
             fitg(jm,1)=fitness1(jm,1);
@@ -191,8 +197,8 @@ function y=fitfast(pop,train_data,train_y,val_data,val_y)
 
  for g=1:depth
          [w1f,bf,w2f,b2f] = trainrb(train_data(:,:,g)',train_y(:,:,g)',0.0,s,Q);
-         Y = testrb(w1f,bf,w2f,b2f,val_data(:,:,g)',val_y(:,:,g)');
-         ym(1,g)=mse(Y-val_y(:,:,g)');
+         ym (1,g) = testrb(w1f,bf,w2f,b2f,val_data(:,:,g)',val_y(:,:,g)');
+
  end
  y=mean(ym)+var(ym);
  end
@@ -206,7 +212,7 @@ function y=fitfast(pop,train_data,train_y,val_data,val_y)
 
    [r,q] = size(p);
    [s2,q] = size(t);
-   b = sqrt(log(2))/sp;
+   b = sqrt(-log(0.5))/sp;
 
    % RADIAL BASIS LAYER OUTPUTS
    P = radbas(dist(p',p)*b);
@@ -286,6 +292,44 @@ function y=fitfast(pop,train_data,train_y,val_data,val_y)
      err = mse(t-a2);
 
  end
+
+ function err = testrb_net (w1,b,w2,b2,p,t)
+ Dimensions
+  R = size(p,1);
+  S2 = size(t,1);
+
+  % Architecture
+  net = network(1,2,[1;1],[1; 0],[0 0;1 0],[0 1]);
+
+  % Simulation
+  net.inputs{1}.size = R;
+  net.layers{1}.size = 0;
+  net.inputWeights{1,1}.weightFcn = 'dist';
+  net.layers{1}.netInputFcn = 'netprod';
+  net.layers{1}.transferFcn = 'radbas';
+  net.layers{2}.size = S2;
+  net.outputs{2}.exampleOutput = t;
+
+  % Performance
+  net.performFcn = 'mse';
+
+  % Design Weights and Bias Values
+  warn1 = warning('off','MATLAB:rankDeficientMatrix');
+  warn2 = warning('off','MATLAB:nearlySingularMatrix');
+  [w1,b1,w2,b2,tr] = designrb(p,t,param.goal,param.spread,mn,param.displayFreq);
+  warning(warn1.state,warn1.identifier);
+  warning(warn2.state,warn2.identifier);
+
+  net.layers{1}.size = length(b1);
+  net.b{1} = b1;
+  net.iw{1,1} = w1;
+  net.b{2} = b2;
+  net.lw{2,1} = w2;
+   Y = sim(net,p);
+   err = mse(Y-t)
+
+
+ end
  %======================================================
 
  function i = findLargeColumn(m)
@@ -307,4 +351,4 @@ function y=fitfast(pop,train_data,train_y,val_data,val_y)
      w = x(:,1:pr);
      b = x(:,pr+1);
    end
- end
+    end
