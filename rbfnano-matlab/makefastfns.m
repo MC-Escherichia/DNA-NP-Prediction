@@ -1,10 +1,10 @@
-function message = makefastfns
+function message = makefastfns()
     assignin('base','trainrb',@trainrb);
     assignin('base','testrb', @testrb);
     message = 'Done';
 end
 %======================================================
-function [w1,b1,w2,b2] = trainrb(p,t,eg,sp,mn)
+function [w1,b,w2,b2] = trainrb(p,t,eg,sp,mn)
 % eg=0
 % sp = s
 % mn = Q
@@ -75,20 +75,22 @@ function [w1,b1,w2,b2] = trainrb(p,t,eg,sp,mn)
   end
 
   [S1,R] = size(w1);
-  b1 = ones(S1,1)*b;
+%  b1 = ones(S1,1)*b;
 
   % Finish
   if isempty(k), k = 1; end
 
 end
 
-function err = testrb(w1,b1,w2,b2,p,t)
+function err = testrb(w1,b,w2,b2,p,t)
 %p = val_data
 %t = val_y
+  %b = sqrt(log(2))/sp;
+  [r,q] = size(p);
     a1 = radbas(dist(w1,p)*b);
-    [w2,b2] = solvelin2(a1,t);
+ %   [w2,b2] = solvelin2(a1,t);
     a2 = w2*a1 + b2*ones(1,q);
-    mse = mse(t-a2);
+    err = mse(t-a2);
 
 end
 %======================================================
