@@ -5,7 +5,7 @@
 % Pass this data to PSO func.
 % Then the PSO will run
 
-function yb=brute_pso(N,iterations)
+function net = train1net(s,Q)
 % Create a for loop
 
 warning('off','all');
@@ -95,21 +95,72 @@ for i=30
         % Now run PSO
         var_i=(i-10)/5
         var_j=(j-10)/5
-        pso_mat((i-10)/5,(j-10)/5,:)=pso_eng(N,iterations,[0.1 3 5 (i-5)],train_data,train_y,val_data,val_y);
-        % Clear variables
-        train_data=[];
-        train_y=[];
-        val_data=[];
-        val_y=[];
-        end
-        if((i+j)<30 || (i+j)>80)
-            var_i=(i-10)/5
-            var_j=(j-10)/5
-            pso_mat((i-10)/5,(j-10)/5,:)=[0 0 0];
+;
+
+
         end
     end
+
 end
-yb=pso_mat;
+         g = 1;
+        [w1f,bf,w2f,b2f] = trainrb(train_data(:,:,g)',train_y(:,:, ...
+                                                          g)',0.0,s,Q)
+        p = train_data(:,:,g)';
+        t = train_y(:,:,g)';
+
+  mn = Q;
+
+
+  % Dimensions
+%  R = size(p,1);
+%  S2 = size(t,1);
+%
+%  % Architecture
+%  net = network(1,2,[1;1],[1; 0],[0 0;1 0],[0 1]);
+%
+%  % Simulation
+%  net.inputs{1}.size = R;
+%  net.layers{1}.size = 0;
+%  net.inputWeights{1,1}.weightFcn = 'dist';
+%  net.layers{1}.netInputFcn = 'netprod';
+%  net.layers{1}.transferFcn = 'radbas';
+%  net.layers{2}.size = S2;
+%  net.outputs{2}.exampleOutput = t;
+%
+%  % Performance
+%  net.performFcn = 'mse';
+%
+%%  % Design Weights and Bias Values
+%%  warn1 = warning('off','MATLAB:rankDeficientMatrix');
+%%  warn2 = warning('off','MATLAB:nearlySingularMatrix');
+%%  [w1,b1,w2,b2,tr] = designrb(p,t,param.goal,param.spread,mn,param.displayFreq);
+%%  warning(warn1.state,warn1.identifier);
+%%  warning(warn2.state,warn2.identifier);
+%%
+%
+%  net.layers{1}.size = length(bf);
+%  net.b{1} = bf;
+%  net.iw{1,1} = w1f;
+%  net.b{2} = b2f;
+%  net.lw{2,1} = w2f
+%
+A = [];
+  for Rs = 0.1:0.1:1;
+        for Rl = 0.1:0.5:4
+            for Rn = 0.2:.5:4
+                   A(end+1,:) = [Rs,Rl,Rn];
+            end
+        end
+  end
+ B =  runrb(w1f,bf,w2f,b2f,A')
+B = B'
+ [h,hg,htick]=terplot;
+%-- Plot the data ...
+hter=ternaryc(B(:,1),B(:,2),B(:,3));
+%-- ... and modify the symbol:
+set(hter,'marker','o','markerfacecolor','none','markersize',4)
+hlabels=terlabel('AlB2','Cr3Si','CsCl');
+
 end
 
 function y = pso_eng(N,iterations,range,train_data,train_y,val_data,val_y)
@@ -162,7 +213,7 @@ for iter=1:iterations
     end
     % Updated the Pbest. Now its Gbest's turn.
     [C I]=min(fitg);
-    gbest=pbest(I,:);
+   gbest=pbest(I,:);
 end
 
 y=[gbest fitg(I,1)];
@@ -267,6 +318,17 @@ Q=pop(1,2);
 
  end
 
+  function a2 = runrb(w1,b,w2,b2,p)
+ %p = val_data
+ %t = val_y
+   %b = sqrt(log(2))/sp;
+   [r,q] = size(p);
+     a1 = radbas(dist(w1,p)*b);
+  %   [w2,b2] = solvelin2(a1,t);
+     a2 = w2*a1 + b2*ones(1,q);
+
+
+ end
  function err = testrb(w1,b,w2,b2,p,t)
  %p = val_data
  %t = val_y
