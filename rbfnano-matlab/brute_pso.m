@@ -5,7 +5,7 @@
 % Pass this data to PSO func.
 % Then the PSO will run
 
-function yb=brute_pso(N,iterations)
+function yb=brute_pso(N,iterations,irange,jrange)
 % Create a for loop
 
 warning('off','all');
@@ -17,11 +17,11 @@ good_y = dataset.good_y;
 
 % Now you have to divide the good_data into training, validation and test
 % data
-% i corresponds to training data
-% j corresponds to validation data
+% i corresponds to training data size
+% j corresponds to validation data size
 pso_mat=[];
-for i=30
-    for j=30
+for i=irange
+    for j=jrange
         if((i+j)>30 && (i+j)<(C-1))
         for k=1:10
 
@@ -43,8 +43,8 @@ for i=30
         val_y=[];
         end
         if((i+j)<30 || (i+j)>80)
-            var_i=(i-10)/5
-            var_j=(j-10)/5
+            var_i=(i-10)/5;
+            var_j=(j-10)/5;
             pso_mat((i-10)/5,(j-10)/5,:)=[0 0 0];
         end
     end
@@ -129,12 +129,26 @@ Q=pop(1,2);
  y=mean(ym)+var(ym);
  end
 
+ function [w1,w2] = trainrb1(p,t,tm,b,mn)
+     P = tm(p,p);
+     PP = sum(P.*P)';
+     d = t';
+     dd = sum(d.*d)
+
+    % CALCULATE "ERRORS" ASSOCIATED WITH VECTORS
+    e = ((P' * d)' .^ 2) ./ (dd * PP');
+
+    [e used left] = pickLargeColumn(e,[],1:length(p));
+    w1 = p(used);
+    a1 = P(w1,p);
+    w2 = t/a1;
+    a2 = w2*a1;
+    MSE = mse(t-a2);
+    for k = 2:mn
+
+    end
+ end
  function [w1,b,w2,b2] = trainrb(p,t,eg,sp,mn)
- % eg=0
- % sp = s
- % mn = Q
- % p = train_data
- % t = train_ y
 
    [r,q] = size(p);
    [s2,q] = size(t);
@@ -205,20 +219,27 @@ Q=pop(1,2);
    % Finish
    if isempty(k), k = 1; end
 
- end
+end
 
- function err = testrb(w1,b,w2,b2,p,t)
- %p = val_data
- %t = val_y
-   %b = sqrt(log(2))/sp;
-   [r,q] = size(p);
-     a1 = radbas(dist(w1,p)*b);
-  %   [w2,b2] = solvelin2(a1,t);
-     a2 = w2*a1 + b2*ones(1,q);
-     err = mse(t-a2);
+function tguess = runrb(w1,b,w2,b2v,p);
+     a1 = transfer(dist(w1,p)*b);
+     a2 = w2*a1 + b2v;
+end
+
+ function err = testrb(w1,b,w2,b2v,p,t)
+
+     err = mse(t-runrb(w1,b,w2,b2v,p));
 
  end
  %======================================================
+ function phi = transfer(d,s)
+     adj = sqrt(log(2))/s;
+     phi = exp(adj.*d.^2);
+ end
+
+ function tm = transfer_matrix(inputs)
+     tm = transfer(dist(inputs,inputs'));
+ end
 
  function i = findLargeColumn(m)
    replace = find(isnan(m));
@@ -228,6 +249,18 @@ Q=pop(1,2);
    i = i(1);
  end
 
+ function  [e used left] = pickLargeColumn(e,used,left)
+   replace = find(isnan(e));
+   e(replace) = zeros(size(replace));
+   m = sum(e .^ 2,1);
+   i = find(m == max(m));
+   i = i(1);
+   e(i,:) = [];
+   e(:,i) = [];
+   used = [used ;i];
+   left(i) = [];
+
+ end
  %======================================================
 
  function [w,b] = solvelin2(p,t)
