@@ -1,0 +1,19 @@
+#+TITLE:Radial Basis Functions for Nanoparticles
+#+AUTHOR: Matthew Conway
+#+email: mfc2137@columbia.edu
+#+INFOJS_OPT:
+#+BABEL:
+-----
+
+#+begin_src matlab :session *MATLAB*
+
+#+end_src
+
+
+
+#+begin_src matlab :exports both :session *MATLAB*
+pwd
+#+end_src
+
+#+RESULTS:
+| 6 | 7 | 8 | 9 | 10 |
