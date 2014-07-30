@@ -37,6 +37,9 @@ fafb1 = dataArray{:, 2};
 nbna1 = dataArray{:, 3};
 Structure = dataArray{:, 4};
 data = [rarb1,fafb1,nbna1];
+flip = find(data(:,1)>1);
+flip_row = @(r) 1./r;
+data(flip,:) = flip_row(data(flip,:));
 %% Clear temporary variables
 clearvars filename delimiter startRow formatSpec fileID dataArray ans;
 %% Split into train/test/validate data
@@ -65,6 +68,7 @@ good_data = sort_data;
 good_str = str;
 good_y = cell2mat(arrayfun(@(v) double(name2vec(v)),str,'UniformOutput',false));
 
+clear data;
 data.good_data = good_data;
 data.good_y = good_y;
 data.names = structures;
