@@ -43,7 +43,7 @@
 ** Stan
 ** Bayesian Inference
 ** Which points are most informative
-
+**
 
 * Notes
 ** How sharp are super ellipsoid?
