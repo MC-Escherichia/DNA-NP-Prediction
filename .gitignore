@@ -16,3 +16,4 @@ rbf-ml/
 *.xlsx
 *.mat
 .\#* # emacs temp files
+*.fig
