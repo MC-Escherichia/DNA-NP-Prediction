@@ -13,14 +13,14 @@ p = randperm(length(gd));
 tr_p = p(1:tr_size);
 tr_y = data.good_y(tr_p,:);
 
-%% train model
+% train model
 s = 0.8;
 Q = 15;
 
 tm = rbf.phi(dist(gd,gd'),s);
 [w1 w2] = rbf.train(tr_p,tr_y,tm,Q);
 
-%% Check error on validation set
+% Check error on validation set
 
 val_p = p(tr_size+1:tr_size+1+val_size);
 val_y = data.good_y(val_p,:);
@@ -28,10 +28,10 @@ val_y = data.good_y(val_p,:);
 rbf.test(w1,w2,tm,val_p,val_y)
 
 %% Generate all points
-    A = [];
- Rs = 0.1:0.1:1;
- Rl = 0.1:0.1:1
- Rn = 1:0.25:4;
+A = [];
+Rs = 0.1:0.1:1;
+Rl = 0.1:0.1:1
+Rn = 1:0.25:4;
 [X Y Z] = meshgrid(Rs,Rl,Rn);
 
 P = [X(:) Y(:) Z(:)];
