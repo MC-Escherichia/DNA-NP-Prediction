@@ -6,7 +6,7 @@
 % Then the PSO will run
 
 
-function yb=brute_pso(N,iterations,irange,jrange,data,model)
+function [yb err] =brute_pso(N,iterations,irange,jrange,data,model)
 % Create a for loop
 
 warning('off','all');
@@ -23,6 +23,8 @@ good_y = data.good_y
 % j corresponds to validation data size
 edm = dist(good_data,good_data');
 pso_mat=[];
+figure
+hold on;
 for i=irange
     for j=jrange
         if((i+j)>30 && (i+j)<(C-1))
@@ -43,24 +45,29 @@ for i=irange
         % Now run PSO
         var_i=(i-10)/5
         var_j=(j-10)/5
-        pso_mat((i-10)/5,(j-10)/5,:)=pso_eng(N,iterations,[0.1 3 5 (i-5)],train_p,train_y,val_p,val_y,edm,model);
+        [res g_prog] = pso_eng(N,iterations,[0.1 3 5 (i-5)],train_p, ...
+                               train_y,val_p,val_y,edm,model);
+
+        plot(g_prog);
+        hold off;
+        hold on;
+        pso_mat((i-10)/5,(j-10)/5,:) = res;
         % Clear variables
         train_p=[];
         train_y=[];
         val_p=[];
         val_y=[];
-        end
-        if((i+j)<30 || (i+j)>80)
-            var_i=(i-10)/5;
-            var_j=(j-10)/5;
-            pso_mat((i-10)/5,(j-10)/5,:)=[0 0 0];
+        else
+            pso_mat((i-10)/5,(j-10)/5,:)=[NaN NaN NaN];
         end
     end
+
 end
+
 yb=pso_mat;
 end
 
-function y = pso_eng(N,iterations,range,train_p,train_y,val_p,val_y,edm,model)
+function [y g_prog] = pso_eng(N,iterations,range,train_p,train_y,val_p,val_y,edm,model)
 % Create a population of agents having random positions. Positions will be
 % s and Q
 format long;
@@ -111,6 +118,9 @@ for iter=1:iterations
     % Updated the Pbest. Now its Gbest's turn.
     [C I]=min(fitg);
     gbest=pbest(I,:);
+    g_prog(iter) = fitg(I,1);
+
+
 end
 
 y=[gbest fitg(I,1)];

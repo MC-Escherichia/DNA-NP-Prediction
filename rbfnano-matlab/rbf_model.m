@@ -4,8 +4,6 @@ runrb = @(w1,w2,tm,p) w2*tm(w1,p);
 
 phi = @(d,s) exp(-(d.^2).*sqrt(log(2))/s);
 
-%edm = @(m) dist(m,m');
-
 transfer_mat = @(dm, s) phi(edm,s);
 
 test_rb = @(w1,w2,tm,p,t) mse(t'-w2*tm(w1,p));
@@ -13,6 +11,7 @@ test_rb = @(w1,w2,tm,p,t) mse(t'-w2*tm(w1,p));
     rbf.train = @trainrb;
     rbf.run = runrb;
     rbf.test = test_rb;
+    rbf.edm = @(a,b) dist(a,b');
     rbf.phi = phi;
 end
 
@@ -36,7 +35,7 @@ function [w1,w2] = trainrb(p,t,tm,mn)
 
 
     % CALCULATE "ERRORS" ASSOCIATED WITH VECTORS
-    e = ((P' * d')' .^ 2 ./  (dd * PP);
+    e = ((P' * d')' .^ 2) ./  (dd * PP);
 
 
     [used left] = pickLargeColumn(e,[],1:length(p));
@@ -57,7 +56,7 @@ function [w1,w2] = trainrb(p,t,tm,mn)
         P = P - wj *a;
         PP = sum(P.*P)';
 
-        e = ((P' * d')' .^ 2 ./  (dd * PP);
+        e = ((P' * d')' .^ 2) ./  (dd * PP);
 
         [used left] = pickLargeColumn(e,used,left);
         wj = P(:,used(end));
