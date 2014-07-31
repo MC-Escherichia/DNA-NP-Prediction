@@ -2,18 +2,50 @@
 #+AUTHOR: Matthew Conway
 #+email: mfc2137@columbia.edu
 #+INFOJS_OPT:
-#+BABEL:
+#+BABEL: :exports none
 -----
 
+
+* Background
+** Given Data
 #+begin_src matlab :session *MATLAB*
 
 #+end_src
+** Radial Basis Function
+** Parameters in question
+**
+
+* Optimization Approach
+** Strategy
+** mldivide vs. mrdivide
+** What are |X_Tr|, |X_V|, |X_Te|?
+*** Apoorv's graph
+*** S and Q histogram
+** Error's in testing vs. validation are correlated
+** Results of one model
+
+
 
 
 
 #+begin_src matlab :exports both :session *MATLAB*
-pwd
+
 #+end_src
 
-#+RESULTS:
-| 6 | 7 | 8 | 9 | 10 |
+
+
+
+
+** In ten models, how valid are the "clusters of the points"
+** In ten models, is there a statistical difference between the entropy of clusters vs. labeled
+** What does the landscape look like.
+* Monte Carlo Approach
+** Stan
+** Bayesian Inference
+** Which points are most informative
+
+
+* Notes
+** How sharp are super ellipsoid?
+** BCC to FCC with harmonic
+** Add custom potential
