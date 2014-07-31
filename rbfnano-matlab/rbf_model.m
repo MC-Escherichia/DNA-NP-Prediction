@@ -1,8 +1,8 @@
 function rbf = rbf_model()
 
-    runrb = @(w1,w2,tm,p) w2*tm(w1,p);
+runrb = @(w1,w2,tm,p) w2*tm(w1,p);
 
-phi = @(d,s) exp((d.^2).*sqrt(log(2))/s);
+phi = @(d,s) exp(-(d.^2).*sqrt(log(2))/s);
 
 %edm = @(m) dist(m,m');
 
@@ -10,15 +10,11 @@ transfer_mat = @(dm, s) phi(edm,s);
 
 test_rb = @(w1,w2,tm,p,t) mse(t'-w2*tm(w1,p));
 
-
-
     rbf.train = @trainrb;
     rbf.run = runrb;
     rbf.test = test_rb;
     rbf.phi = phi;
 end
-
-
 
 
 function  [used1 left] = pickLargeColumn(e,used,left)
@@ -40,17 +36,17 @@ function [w1,w2] = trainrb(p,t,tm,mn)
 
 
     % CALCULATE "ERRORS" ASSOCIATED WITH VECTORS
-    e1 = ((P' * d')' .^ 2);
-    e2 =  (dd * PP);
-    e = e1./e2;
+    e = ((P' * d')' .^ 2 ./  (dd * PP);
+
 
     [used left] = pickLargeColumn(e,[],1:length(p));
     wj = P(:,used(end));
 
     w1 = p(used);
 
-    a1 = tm(w1,p);
-    w2 = t'/a1; % What does this do?
+     a1 = tm(w1,p);
+     w2 = t\a1';
+     %    w2 = t'*1\a1; % What does this do?
                %    a2 = w2*a1;
                %    MSE = mse(t-a2);
 
@@ -61,16 +57,15 @@ function [w1,w2] = trainrb(p,t,tm,mn)
         P = P - wj *a;
         PP = sum(P.*P)';
 
-            e1 = ((P' * d')' .^ 2);
-    e2 =  (dd * PP);
-    e = e1./e2;
+        e = ((P' * d')' .^ 2 ./  (dd * PP);
 
         [used left] = pickLargeColumn(e,used,left);
         wj = P(:,used(end));
 
         w1 = p(used);
         a1 = tm(w1,p);
-        w2 = t'/a1;
+        w2 = t\a1';
+
         % a2 = w2*a1;
         %        MSE = mse(t-a2);
     end

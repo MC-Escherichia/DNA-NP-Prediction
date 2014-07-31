@@ -127,7 +127,7 @@ Q=pop(1,2);
 tm = model.phi(edm,s);
 
 for g=1:depth
-         [w1,w2] = model.train(train_p(:,g),train_y(:,:,g),tm,Q)
+         [w1,w2] = model.train(train_p(:,g),train_y(:,:,g),tm,Q);
 
 
          ym(g) = model.test(w1,w2,tm,val_p(:,g),val_y(:,:,g));
