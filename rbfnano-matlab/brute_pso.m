@@ -179,7 +179,7 @@ Q=pop(1,2);
 %         ym(1,g)=mse(Y-val_y(:,:,g)');
 % end
 % y=mean(ym)+var(ym);
-% end
+ end
 
  function y=fitf(pop,train_data,train_y,val_data,val_y)
  s=pop(1,1);
