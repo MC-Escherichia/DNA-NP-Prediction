@@ -27,13 +27,13 @@ warning;
 % i corresponds to training data size
 % j corresponds to validation data size
 edm = dist(good_data,good_data');
-
 model = rbf_model();
+
 pso_mat=[];
 figure(1)
 hold on;
-irange = 15:5:50;
-jrange = 15:5:50;
+irange = 15:5:30;
+jrange = 15:5:30;
 for i=irange
     for j=jrange
         if((i+j)>30 && (i+j)<(C-1))
