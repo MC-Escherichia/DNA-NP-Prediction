@@ -4,9 +4,12 @@
 % Create the subdivision of data.
 % Pass this data to PSO func.
 % Then the PSO will run
+function yb=brute_pso ()
+    yb = brute_pso1 (20,20);
+end
 
+function yb=brute_pso1(N,iterations)
 
-function [yb err] =brute_pso(N,iterations,irange,jrange,data,model)
 % Create a for loop
 
 warning('off','all');
@@ -74,8 +77,10 @@ format long;
 pop=[];
 fitness=[];
 for i=1:N
+
     pop=[pop;(rand*(range(2)-range(1))+range(1)) round(rand*(range(4)-range(3))+range(3))];
     fitness=[fitness;fitf(pop(i,:),train_p,train_y,val_p,val_y,edm,model)];
+
 
 
 end
@@ -128,7 +133,6 @@ y=[gbest fitg(I,1)];
 
 end
 
-
 function y=fitf(pop,train_p,train_y,val_p,val_y,edm,model)
 
 s=pop(1,1);
@@ -141,7 +145,49 @@ for g=1:depth
          [w1,w2] = model.train(train_p(:,g),train_y(:,:,g),tm,Q);
 
 
+ end
+
+ function err = testrb_net (w1,b,w2,b2,p,t)
+ Dimensions
+  R = size(p,1);
+  S2 = size(t,1);
+
+  % Architecture
+  net = network(1,2,[1;1],[1; 0],[0 0;1 0],[0 1]);
+
+  % Simulation
+  net.inputs{1}.size = R;
+  net.layers{1}.size = 0;
+  net.inputWeights{1,1}.weightFcn = 'dist';
+  net.layers{1}.netInputFcn = 'netprod';
+  net.layers{1}.transferFcn = 'radbas';
+  net.layers{2}.size = S2;
+  net.outputs{2}.exampleOutput = t;
+
+  % Performance
+  net.performFcn = 'mse';
+
+  % Design Weights and Bias Values
+  warn1 = warning('off','MATLAB:rankDeficientMatrix');
+  warn2 = warning('off','MATLAB:nearlySingularMatrix');
+  [w1,b1,w2,b2,tr] = designrb(p,t,param.goal,param.spread,mn,param.displayFreq);
+  warning(warn1.state,warn1.identifier);
+  warning(warn2.state,warn2.identifier);
+
+  net.layers{1}.size = length(b1);
+  net.b{1} = b1;
+  net.iw{1,1} = w1;
+  net.b{2} = b2;
+  net.lw{2,1} = w2;
+   Y = sim(net,p);
+   err = mse(Y-t)
+
+
+ end
+ %======================================================
+
          ym(g) = model.test(w1,w2,tm,val_p(:,g),val_y(:,:,g));
+
 
 
 end
