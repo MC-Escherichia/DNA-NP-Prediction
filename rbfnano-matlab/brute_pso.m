@@ -5,20 +5,20 @@
 % Pass this data to PSO func.
 % Then the PSO will run
 function yb=brute_pso ()
-    yb = brute_pso1 (20,20);
+    yb = brute_pso1 (20,20,load_np_data());
 end
 
-function yb=brute_pso1(N,iterations)
+function yb=brute_pso1(N,iterations,data)
 
 % Create a for loop
 
 warning('off','all');
 warning;
 
-load('data.mat');
 
-% good_data = data.good_data;
-% good_y = data.good_y
+
+ good_data = data.good_data;
+ good_y = data.good_y
 
 [C R]=size(good_data)
 
@@ -27,9 +27,13 @@ load('data.mat');
 % i corresponds to training data size
 % j corresponds to validation data size
 edm = dist(good_data,good_data');
+
+model = rbf_model();
 pso_mat=[];
-figure
+figure(1)
 hold on;
+irange = 15:5:50;
+jrange = 15:5:50;
 for i=irange
     for j=jrange
         if((i+j)>30 && (i+j)<(C-1))
@@ -37,8 +41,8 @@ for i=irange
             noCr3Si = 1;
             while noCr3Si ;
            index_mat=randperm(C);
-           train_p(:,k) = index_mat(1:i);
-           train_y(:,:,k) = good_y(train_p(:,k),:);
+           train_p(:,k) = index_mat(1:i)
+           train_y(:,:,k) = good_y(train_p(:,k),:)
 
              noCr3Si= ~sum(train_y(:,3,k));
             end
