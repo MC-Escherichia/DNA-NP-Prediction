@@ -4,7 +4,7 @@ runrb = @(w1,w2,tm,p) w2*tm(w1,p);
 
 phi = @(d,s) exp(-(d.^2).*sqrt(log(2))/s);
 
-transfer_mat = @(dm, s) phi(edm,s);
+transfer_mat = @(edm, s) phi(edm,s);
 
 test_rb = @(w1,w2,tm,p,t) mse(t'-w2*tm(w1,p));
 

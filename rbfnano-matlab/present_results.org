@@ -2,22 +2,131 @@
 #+AUTHOR: Matthew Conway
 #+email: mfc2137@columbia.edu
 #+INFOJS_OPT:
-#+BABEL: :exports none
+#+STARTUP: option entitiespretty latexpreview
+#+BABEL: :session *MATLAB* :cache yes :results output graphics :exports results :tangle yes :eval yes
+#+LaTeX_HEADER: \usepackage[T1]{fontenc}
+#+LaTeX_HEADER: \usepackage{mathpazo}
+#+LaTeX_HEADER: \linespread{1.05}
+#+LaTeX_HEADER: \usepackage[scaled]{helvet}
+#+LaTeX_HEADER: \usepackage{courier}
+#+LaTeX_HEADER: \usepackage{minted}
 -----
 
 
 * Background
 ** Given Data
-#+begin_src matlab :session *MATLAB*
+There are 101 experimental points that I recieved from Thi, with the distribution given in the pie chart.
+Most experimental points are CsCl, and a good many were given some type of cluster designation.
+The learning goal for the radial basis function is to train on some subset of the labeled points, predict the remaining labeled points, and be confused by some cluster points.  The fact that previously during investigation labels have changed with a second look, and the probablistic nature of machine learning in general means that we see 80-90% prediction as a start.
+#+begin_src matlab :session *MATLAB* :results file :exports results
+  data = load_np_data();
+  get_struct = @(i) data.names(find(data.good_y(i,:)));
+  good_names = arrayfun(get_struct,(1:length(data.good_y))');
+  all_names = [good_names; data.cluster_names];
+  unique_names = {'CsCl'  'Disordered CsCl'  'CsCl+trace AlB2' ['AlB2+trace ' ...
+                      'CsCl'] 'AlB2' 'Disordered AlB2' 'Disordered Cr3Si' 'Cr3Si'};
 
+  occurrences=strcmpi(all_names(:,ones(1,length(unique_names))),unique_names(ones(length(all_names),1),:));
+
+  counts = sum(occurrences,1);
+  H = figure(1);
+
+  set(H,'visible','on','colormap',colormap('jet'));
+  pie(counts,unique_names);
+  text_handle = findobj(H,'Type','text');
+
+  %% move pie text
+  oldExtents_cell = get(text_handle,{'Extent'}); % cell array
+  oldExtents = cell2mat(oldExtents_cell); % numeric array
+  set(text_handle,{'FontSize'},num2cell(ones(length(text_handle),1)*14));
+  newExtents_cell = get(text_handle,{'Extent'}); % cell array
+  newExtents = cell2mat(newExtents_cell); % numeric array
+  width_change = newExtents(:,3)-oldExtents(:,3);
+
+  signValues = sign(oldExtents(:,1));
+  offset = signValues.*(width_change/2);
+
+  textPositions_cell = get(text_handle,{'Position'}); % cell array
+  textPositions = cell2mat(textPositions_cell); % numeric array
+  textPositions(:,1) = textPositions(:,1) + offset; % add offset
+%  textPositions(:,2) = textPositions(:,2); %  add space vertically
+
+  set(text_handle,{'Position'},num2cell(textPositions,[3,2])) % set new position
+
+  print -depsc hist.eps;
+  ans = 'hist.eps';
 #+end_src
-** Radial Basis Function
-** Parameters in question
-**
 
+#+RESULTS[5a52f09af202fc36fb96cb655a97b5ffcb7785ff]:
+[[file:hist.eps]]
+
+
+
+** Radial Basis Function
+*** In general RBF's have the follow form where \phi denotes the transfer function.
+\begin{equation}
+\label{eq:1}
+ y(\mathbf{x})=\sum_{i=1}^Q w_i \cdot \phi (\mathbf{x} ,
+\mathbf{x_{i}})
+\end{equation}
+*** Transfer Functions
+- A transfer function will have the value 0, when \mathbf{x}=\mathbf{x_i}
+  and it's value will increase as it the points grow farther apart.
+- When training a model, Q pts are chosen from the training set, and their weights, w_i are chosen. Thus pts with large w_i are more informative for predicting the rest of the training data.
+- RBF's are trained using orthogonal least squares, so given N training points, the model will choose the Q most-informative points.
+*** Gaussian Transfer Function
+\begin{equation}
+\label{eq:2}
+\phi(\mathbf{x},\mathbf{x_i}) = \exp(\frac{-||\mathbf{x}-\mathbf{x_i}||^2 }{\sqrt{\ln(-2) \cdot  s}})
+\end{equation}
+- Gaussian Transfer Functions have a parameter /s/, called the /spread/, which controls how far into the paramater space a particular point will have a say.
+- A very large /s/ will turn the model into a set of needles that memorizes the training points, while a very small /s/ will reduce the model to a weighted average of existing points, removing all the distance information.
+*** Training the Model
+- To train and check a model, the data is broken into three
+  1) X_{T}, the *training set*, on which Orthogonal least squares is run.
+     - NB: \forall i \mathbf{x_i} \in  X_T and Q < ||X_{T}||
+  2) X_{V}, the *validation set*, used to find the lowest values of /s/ and Q
+  3) X_{H}. the hold-out set, or *testing set*. At no point in the training procedure does the model see the labels for these points, so they provide an unbiased estimate of the accuracy of a trained model.
 * Optimization Approach
 ** Strategy
+Starting with the 82 data points that form crystal structures, we wish to train a RBF-model, but we have no idea how big the training and validation sets should be. The smaller they are the more klout the model will have, but too small and it won't be very accurate.  Having decided a split for the data, /s/ and Q remain to be determined.  From the intuition that increasing Q gives the model more flexibility to memorize the training data, keeping Q as low as possible while still performing well on the validation data is the goal.  With /s/, making it too small or large will cause a memorization of the training data, so keeping it somewhere between 0.25 and 4 is the goal.
+** Training one model
+*** The data is split into three parts
+Note that the low amount of Cr3Si data, requires us to resample training data until /at least one/ Cr3Si data point is in the data.
+#+BEGIN_SRC matlab :session *MATLAB* :exports both
+good_data = data.good_data;
+good_y = data.good_y;
+[C R]=size(good_data);
+
+
+noCr3Si = 1;
+ while noCr3Si ;
+ index_mat=randperm(C);
+ train_p(:,k) = index_mat(1:i)
+ train_y(:,:,k) = good_y(train_p(:,k),:)
+ noCr3Si= ~sum(train_y(:,3,k));
+ end
+ val_p(:,k) = index_mat(i+1:i+1+j);
+ val_y(:,:,k) = good_y(val_p(:,k),:);
+
+
+#+END_SRC
+*** A function for training one model
+#+BEGIN_SRC matlab :session *MATLAB*
+
+function y = sqr(x)
+y = x*x;
+end
+
+#+END_SRC
+
+#+RESULTS:
+: org_babel_eoe
+
+
 ** mldivide vs. mrdivide
+ There was a two-week delay in getting results from this due to a subtle matlab bug.
+
 ** What are |X_Tr|, |X_V|, |X_Te|?
 *** Apoorv's graph
 *** S and Q histogram

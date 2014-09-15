@@ -322,7 +322,20 @@ Q=pop(1,2);
  %p = val_data
  %t = val_y
    %b = sqrt(log(2))/sp;
-   [r,q] = size(p);
+     [r,q] = size(p);
+     a1 = radbas(dist(w1,p)*b);
+     %   [w2,b2] = solvelin2(a1,t);
+     a2 = w2*a1 + b2*ones(1,q);
+
+
+ end
+
+
+function a2 = runrb2(w1,b,w2,b2,p)
+ %p = val_data
+ %t = val_y
+   %b = sqrt(log(2))/sp;
+     [r,q] = size(p);
      a1 = radbas(dist(w1,p)*b);
   %   [w2,b2] = solvelin2(a1,t);
      a2 = w2*a1 + b2*ones(1,q);

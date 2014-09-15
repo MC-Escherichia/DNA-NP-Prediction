@@ -27,16 +27,17 @@ warning;
 % i corresponds to training data size
 % j corresponds to validation data size
 edm = dist(good_data,good_data');
-model = rbf_model();
+
 
 pso_mat=[];
 figure(1)
 hold on;
-irange = 15:5:30;
-jrange = 15:5:30;
+irange = 15:5:C;
+jrange = 15:5:C;
 for i=irange
     for j=jrange
         if((i+j)>30 && (i+j)<(C-1))
+        % Sample data 10 times, guranatee Cr3Si in training set.
         for k=1:10
             noCr3Si = 1;
             while noCr3Si ;
@@ -44,7 +45,7 @@ for i=irange
            train_p(:,k) = index_mat(1:i)
            train_y(:,:,k) = good_y(train_p(:,k),:)
 
-             noCr3Si= ~sum(train_y(:,3,k));
+           noCr3Si= ~sum(train_y(:,3,k));
             end
            val_p(:,k) = index_mat(i+1:i+1+j);
            val_y(:,:,k) = good_y(val_p(:,k),:);
@@ -54,12 +55,13 @@ for i=irange
         % Now run PSO
         var_i=(i-10)/5
         var_j=(j-10)/5
+
+        clear model
+        model = rbf_model();
+
         [res g_prog] = pso_eng(N,iterations,[0.1 3 5 (i-5)],train_p, ...
                                train_y,val_p,val_y,edm,model);
 
-        plot(g_prog);
-        hold off;
-        hold on;
         pso_mat((i-10)/5,(j-10)/5,:) = res;
         % Clear variables
         train_p=[];
@@ -150,9 +152,6 @@ tm = model.phi(edm,s);
 for g=1:depth
          [w1,w2] = model.train(train_p(:,g),train_y(:,:,g),tm,Q);
          ym(g) = model.test(w1,w2,tm,val_p(:,g),val_y(:,:,g));
-
-
-
 end
  y=mean(ym)+var(ym);
 end

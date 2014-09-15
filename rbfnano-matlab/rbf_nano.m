@@ -100,7 +100,7 @@ end
     train_y = good_y(r(frac_int+1:end),:);
 
 
-    %%% CREATE CONFLICT!
+
 %% RBF
 
        for s=1:5:40
