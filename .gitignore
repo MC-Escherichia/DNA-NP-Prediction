@@ -17,3 +17,13 @@ rbf-ml/
 *.mat
 .\#* # emacs temp files
 *.fig
+*.pdf
+
+*.pyg
+
+*.tex
+
+*.eps
+
+*.jpg
+
