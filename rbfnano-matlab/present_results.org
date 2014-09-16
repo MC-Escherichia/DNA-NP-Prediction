@@ -66,7 +66,7 @@ The learning goal for the radial basis function is to train on some subset of th
 *** In general RBF's have the follow form where \phi denotes the transfer function.
 \begin{equation}
 \label{eq:1}
- y(\mathbf{x})=\sum_{i=1}^Q w_i \cdot \phi (\mathbf{x} ,
+ y(\mathbf{x})=\sum_{i=1}^Q w_i \cdot \phi (\mathbf{x}_{} ,
 \mathbf{x_{i}})
 \end{equation}
 *** Transfer Functions
@@ -94,6 +94,8 @@ Starting with the 82 data points that form crystal structures, we wish to train 
 *** The data is split into three parts
 Note that the low amount of Cr3Si data, requires us to resample training data until /at least one/ Cr3Si data point is in the data.
 #+BEGIN_SRC matlab :session *MATLAB* :exports both
+
+
 good_data = data.good_data;
 good_y = data.good_y;
 [C R]=size(good_data);
@@ -101,11 +103,14 @@ good_y = data.good_y;
 
 noCr3Si = 1;
  while noCr3Si ;
- index_mat=randperm(C);
+ index_mat=randperm(C); % randomly order indexes
+ % pull out training data and labels
  train_p(:,k) = index_mat(1:i)
  train_y(:,:,k) = good_y(train_p(:,k),:)
+ % check for Cr3Si.
  noCr3Si= ~sum(train_y(:,3,k));
  end
+ % sample validation points
  val_p(:,k) = index_mat(i+1:i+1+j);
  val_y(:,:,k) = good_y(val_p(:,k),:);
 
@@ -114,9 +119,7 @@ noCr3Si = 1;
 *** A function for training one model
 #+BEGIN_SRC matlab :session *MATLAB*
 
-function y = sqr(x)
-y = x*x;
-end
+
 
 #+END_SRC
 
