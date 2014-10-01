@@ -9,15 +9,20 @@
 #+LaTeX_HEADER: \linespread{1.05}
 #+LaTeX_HEADER: \usepackage[scaled]{helvet}
 #+LaTeX_HEADER: \usepackage{courier}
+#+LaTeX_HEADER: \usepackage{color}
 #+LaTeX_HEADER: \usepackage{minted}
+#+LaTeX_HEADER: \usemintedstyle{default}
+#+LaTeX_HEADER: \newminted{common-lisp}{fontsize=\footnotesize}
 -----
 
+* Introduction
+** Motivation
+** Summary of Results
 
 * Background
 ** Given Data
-There are 101 experimental points that I recieved from Thi, with the distribution given in the pie chart.
-Most experimental points are CsCl, and a good many were given some type of cluster designation.
-The learning goal for the radial basis function is to train on some subset of the labeled points, predict the remaining labeled points, and be confused by some cluster points.  The fact that previously during investigation labels have changed with a second look, and the probablistic nature of machine learning in general means that we see 80-90% prediction as a start.
+There are 101 experimental points that I recieved from Thi, with the distribution given in the pie chart.Most experimental points are CsCl, and a good many were given some type of cluster designation. The learning goal for the radial basis function is to train on some subset of the labeled points, predict the remaining labeled points, and be confused by some cluster points.  The fact that previously during investigation labels have changed with a second look, and the probablistic nature of machine learning in general means that we see 80-90% prediction as a start.
+
 #+begin_src matlab :session *MATLAB* :results file :exports results
   data = load_np_data();
   get_struct = @(i) data.names(find(data.good_y(i,:)));
@@ -31,7 +36,7 @@ The learning goal for the radial basis function is to train on some subset of th
   counts = sum(occurrences,1);
   H = figure(1);
 
-  set(H,'visible','on','colormap',colormap('jet'));
+  set(H,'visible','off','colormap',colormap('bone'));
   pie(counts,unique_names);
   text_handle = findobj(H,'Type','text');
 
@@ -49,28 +54,26 @@ The learning goal for the radial basis function is to train on some subset of th
   textPositions_cell = get(text_handle,{'Position'}); % cell array
   textPositions = cell2mat(textPositions_cell); % numeric array
   textPositions(:,1) = textPositions(:,1) + offset; % add offset
-%  textPositions(:,2) = textPositions(:,2); %  add space vertically
-
   set(text_handle,{'Position'},num2cell(textPositions,[3,2])) % set new position
 
   print -depsc hist.eps;
   ans = 'hist.eps';
 #+end_src
 
+
 #+RESULTS[5a52f09af202fc36fb96cb655a97b5ffcb7785ff]:
 [[file:hist.eps]]
-
+#+CAPTION: [Distribution of Experimental Results]{About a third of experimentally explored points form clusters, while a large amount of the experimental data forms the CsCl structure}
 
 
 ** Radial Basis Function
-*** In general RBF's have the follow form where \phi denotes the transfer function.
+In general RBF's have the follow form where \phi denotes the transfer function.
 \begin{equation}
 \label{eq:1}
- y(\mathbf{x})=\sum_{i=1}^Q w_i \cdot \phi (\mathbf{x}_{} ,
-\mathbf{x_{i}})
+ y(\mathbf{x})=\sum_{i=1}^Q w_i \cdot \phi (\mathbf{x}_{} ,\mathbf{x_{i}})
 \end{equation}
 *** Transfer Functions
-- A transfer function will have the value 0, when \mathbf{x}=\mathbf{x_i}
+- A transfer function will have the value 0, *x* = *x_i*
   and it's value will increase as it the points grow farther apart.
 - When training a model, Q pts are chosen from the training set, and their weights, w_i are chosen. Thus pts with large w_i are more informative for predicting the rest of the training data.
 - RBF's are trained using orthogonal least squares, so given N training points, the model will choose the Q most-informative points.
@@ -84,41 +87,25 @@ The learning goal for the radial basis function is to train on some subset of th
 *** Training the Model
 - To train and check a model, the data is broken into three
   1) X_{T}, the *training set*, on which Orthogonal least squares is run.
-     - NB: \forall i \mathbf{x_i} \in  X_T and Q < ||X_{T}||
-  2) X_{V}, the *validation set*, used to find the lowest values of /s/ and Q
-  3) X_{H}. the hold-out set, or *testing set*. At no point in the training procedure does the model see the labels for these points, so they provide an unbiased estimate of the accuracy of a trained model.
+     - NB: \forall i *x_i* \in  X_T $ and Q < ||X_{T}||
+  2) X_{V}, the *validation set*, used to make sure that the training set parameters generalize. This concretely amounts finding the values of /s/ and Q that produce the lowest validation set.
+  3) X_{H}. the *hold-out set*, or testing set. At no point in the training procedure does the model see the labels for these points, so they provide an unbiased estimate of the accuracy of a trained model.
+
+
 * Optimization Approach
-** Strategy
+
 Starting with the 82 data points that form crystal structures, we wish to train a RBF-model, but we have no idea how big the training and validation sets should be. The smaller they are the more klout the model will have, but too small and it won't be very accurate.  Having decided a split for the data, /s/ and Q remain to be determined.  From the intuition that increasing Q gives the model more flexibility to memorize the training data, keeping Q as low as possible while still performing well on the validation data is the goal.  With /s/, making it too small or large will cause a memorization of the training data, so keeping it somewhere between 0.25 and 4 is the goal.
+
 ** Training one model
+
+
 *** The data is split into three parts
 Note that the low amount of Cr3Si data, requires us to resample training data until /at least one/ Cr3Si data point is in the data.
-#+BEGIN_SRC matlab :session *MATLAB* :exports both
+#+BEGIN_SRC matlab :session *MATLAB* :exports code :eval yes
 
-
-good_data = data.good_data;
-good_y = data.good_y;
-[C R]=size(good_data);
-
-
-noCr3Si = 1;
- while noCr3Si ;
- index_mat=randperm(C); % randomly order indexes
- % pull out training data and labels
- train_p(:,k) = index_mat(1:i)
- train_y(:,:,k) = good_y(train_p(:,k),:)
- % check for Cr3Si.
- noCr3Si= ~sum(train_y(:,3,k));
- end
- % sample validation points
- val_p(:,k) = index_mat(i+1:i+1+j);
- val_y(:,:,k) = good_y(val_p(:,k),:);
-
-
-#+END_SRC
-*** A function for training one model
-#+BEGIN_SRC matlab :session *MATLAB*
-
+hasCr3Si = @(X,Y) sum(Y(:,3)); % 0 if no Cr3Si Points are selected, >= 1 if at least one is selected
+data = load_np_data();
+[p,vp,tp] = sampledata(data.good_data,data.good_y,30,30,hasCr3Si); % p, vp, tp, are lists of indexes of trainign, validation and test points.
 
 
 #+END_SRC
@@ -127,12 +114,135 @@ noCr3Si = 1;
 : org_babel_eoe
 
 
-** mldivide vs. mrdivide
- There was a two-week delay in getting results from this due to a subtle matlab bug.
+*** Training one model
+
+
+
+ #+begin_src matlab :session *MATLAB* :exports code :eval yes :results none
+ ss= 0.1:0.1:4;
+
+ net = train1net(data.good_data,data.good_y,p,vp,ss);
+
+
+labels = {'Training Points allowed (Q)'; 'Spread (\sigma)';  'validation errors'};
+plot3D(1:length(p),ss,net{2},labels);
+
+print -depsc one_model.eps;
+ans = 'one_model.eps'
+#+end_src
+
+
+#+RESULTS:
+[[file:one_model.eps]]
+\label{one-model}
+#+CAPTION:[Dependence of training error  on \textit{s} and Q]{One sample of 30 training points and 30 validation points is trained for varying \textit{s} and Q, and the number of validation errors is plotted.  Q of around 20, and a large number of s's produce errors of 3. Keeping Q too low gives the model too little information, and too high allows it to memorize the training set; both result in high validation errors. }
+
+*** Error averaged over 100 random samplings
+
+#+begin_src matlab :session *MATLAB* :results file :exports results
+average_err = net{2};
+for i = 1:29
+   disp(i);
+   net_i = train1net(data.good_data,data.good_y,p,vp,ss);
+   average_err = (average_err + net_i{2})./2;
+end
+
+
+
+plot3D(1:length(p),ss,average_err,labels);
+
+print -depsc model_bunch.eps;
+ans = 'model_bunch.eps'
+#+end_src
+
+#+RESULTS:
+[[file:model_bunch.eps]]
+#+CAPTION:[Average Dependence of Validation Error on \textit{s} and Q]{The prodecude to create \texttt{one-model} is repeated 100 times.  At first glance, the "right" s and Q don't seem to be a function of how the data is sampled. }
+
+
+
+
+
 
 ** What are |X_Tr|, |X_V|, |X_Te|?
-*** Apoorv's graph
-*** S and Q histogram
+
+It wasn't immediate clear how to partition the data into training, validationa and hold-out sets. A model trained larger hold-out set would be more impressive, while making the training or validation set too small results in a bad model. Presumably there's some bend
+
+#+BEGIN_SRC matlab :session *MATLAB* :exports code :cache yes :eval yes
+
+%res = brute_pso();
+
+#+END_SRC
+
+#+RESULTS[578d41b959b9d59b0b5b408f1bbdcf085be719ee]:
+: org_babel_eoe
+
+#+name: unpack-results
+#+BEGIN_SRC matlab :session *MATLAB* :exports none :cache no :eval yes
+fits = zeros(15,15);
+ss = zeros(15,15);
+Qs = zeros(15,15);
+
+errs = [];
+for i = 1:15
+  for j = 1:15
+   r = res{i,j};
+    if iscell(r)
+     szs = [ones(length(r{2}),1)*i*5, ones(length(r{2}),1)*j*5];
+     n = r{1};
+     errs = [errs;r{2} szs];
+     ss(i,j) = n(1);
+     Qs(i,j) = n(2);
+     fits(i,j) = n(3);
+    else
+     ss(i,j)   = NaN;
+     Qs(i,j)   = NaN;
+     fits(i,j) = NaN;
+   end
+  end
+end
+#+END_SRC
+
+#+RESULTS[abcaf2c3d9bc77e3c0575433d2ba2d7a4e6d94d9]: unpack-results
+: org_babel_eoe
+
+#+name: corr-errs
+#+BEGIN_SRC matlab :session *MATLAB* :results file :eval yes
+H = figure(1);
+
+set(H,'visible','off','colormap',colormap('bone'))
+C = colormap;
+scatter(errs(:,1),errs(:,2),errs(:,3)/15,C(errs(:,4)./5,:));
+title('Testing Error vs. Validation Error');
+xaxis('Validation Error');
+yaxis('Hold out Error');
+  print -depsc err_corr.eps;
+  ans = 'err_corr.eps';
+#+END_SRC
+
+#+RESULTS: corr-errs
+[[file:err_corr.eps]]
+
+**
+
+* S and Q histogram
+#+BEGIN_SRC matlab :session *MATLAB* :exports results :results file
+H = figure();
+set(H,'visible','off','colormap',colormap('bone'));
+
+subplot(2,1,1);
+hist(ss(:))
+title('Spread (s) Histogram')
+xaxis('Spread');
+ylabel('Frequency');
+
+
+subplot(2,1,2);
+hist(Qs(:))
+title('Fraction of Training Data as Centers Histogram')
+xaxis('Q/|X_Tr|');
+ylabel('Frequency')
+#+END_SRC
 ** Error's in testing vs. validation are correlated
 ** Results of one model
 
